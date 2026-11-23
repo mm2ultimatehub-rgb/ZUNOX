@@ -13,7 +13,7 @@ Second \"item\" text"</string>
 
 -->
 <resources>
-    <string name="app_name">ReVanced Manager</string>
+    <string name="app_name">ZUNOX</string>
     <string name="patcher">Patcher</string>
     <string name="patches">Patches</string>
     <string name="cli">CLI</string>
@@ -493,8 +493,8 @@ It’s only compatible with these versions: %2$s</string>
 
     <string name="announcements">Announcements</string>
     <string name="archive">Archive</string>
-    <string name="about_revanced_manager">About ReVanced Manager</string>
-    <string name="revanced_manager_description">ReVanced Manager is an Android application that uses ReVanced Patcher, allowing you to download and apply patches to your favorite apps</string>
+    <string name="about_revanced_manager">About ZUNOX</string>
+    <string name="revanced_manager_description">ZUNOX is an Android application built on the ReVanced patching ecosystem, allowing you to download and apply patches to your favorite apps.</string>
     <string name="developer_options_taps">%d more taps</string>
     <string name="developer_options_enabled">Enabled developer options</string>
     <string name="developer_options_already_enabled">Developer options are already enabled</string>
