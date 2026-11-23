@@ -7,6 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.EaseOutQuart
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -137,26 +141,36 @@ private fun ReVancedManager(vm: MainViewModel) {
         navController = navController,
         startDestination = startDestination,
         enterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(300, easing = EaseOutQuart),
-                initialOffsetX = { it })
+            fadeIn(animationSpec = tween(220)) +
+                scaleIn(initialScale = 0.985f, animationSpec = tween(320, easing = EaseOutQuart)) +
+                slideInHorizontally(
+                    animationSpec = tween(320, easing = EaseOutQuart),
+                    initialOffsetX = { it / 5 }
+                )
         },
         exitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(300, easing = EaseOutQuart),
-                targetOffsetX = { -it / 3 })
+            fadeOut(animationSpec = tween(170)) +
+                scaleOut(targetScale = 0.992f, animationSpec = tween(220, easing = EaseOutQuart)) +
+                slideOutHorizontally(
+                    animationSpec = tween(280, easing = EaseOutQuart),
+                    targetOffsetX = { -it / 4 }
+                )
         },
         popEnterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(
-                    300,
-                    easing = EaseOutQuart
-                ), initialOffsetX = { -it / 3 })
+            fadeIn(animationSpec = tween(220)) +
+                scaleIn(initialScale = 0.985f, animationSpec = tween(320, easing = EaseOutQuart)) +
+                slideInHorizontally(
+                    animationSpec = tween(320, easing = EaseOutQuart),
+                    initialOffsetX = { -it / 5 }
+                )
         },
         popExitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(300, easing = EaseOutQuart),
-                targetOffsetX = { it })
+            fadeOut(animationSpec = tween(170)) +
+                scaleOut(targetScale = 0.992f, animationSpec = tween(220, easing = EaseOutQuart)) +
+                slideOutHorizontally(
+                    animationSpec = tween(280, easing = EaseOutQuart),
+                    targetOffsetX = { it / 4 }
+                )
         }
     ) {
         composable<Onboarding> {
