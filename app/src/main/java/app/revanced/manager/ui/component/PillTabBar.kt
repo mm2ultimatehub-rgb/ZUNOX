@@ -3,6 +3,8 @@ package app.revanced.manager.ui.component
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
@@ -185,16 +188,40 @@ private fun PillTabContent(
     icon: (@Composable () -> Unit)?,
     text: @Composable () -> Unit
 ) {
-    val contentColor = if (isSelected) colors.selectedContentColor else colors.unselectedContentColor
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) colors.selectedContentColor else colors.unselectedContentColor,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "zunoxTabContentColor"
+    )
+    val iconScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.08f else 0.94f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "zunoxTabIconScale"
+    )
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0.72f,
+        animationSpec = tween(durationMillis = 220),
+        label = "zunoxTabContentAlpha"
+    )
     val fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         ProvideTextStyle(MaterialTheme.typography.labelLarge.copy(fontWeight = fontWeight)) {
             Row(
+                modifier = Modifier.graphicsLayer { alpha = contentAlpha },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(PillTabBarDefaults.IconTextSpacing)
             ) {
-                icon?.invoke()
+                if (icon != null) {
+                    Box(
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = iconScale
+                            scaleY = iconScale
+                        }
+                    ) {
+                        icon()
+                    }
+                }
                 text()
             }
         }
@@ -239,9 +266,9 @@ object PillTabBarDefaults {
     val IconTextSpacing: Dp = 6.dp
 
     internal const val PressedScale = 0.99f
-    internal val PressAnimationSpec = tween<Float>(
-        durationMillis = 80,
-        easing = CubicBezierEasing(0.2f, 0f, 0.4f, 1f)
+    internal val PressAnimationSpec = spring<Float>(
+        dampingRatio = Spring.DampingRatioMediumBouncy,
+        stiffness = Spring.StiffnessHigh
     )
 
     @Composable
