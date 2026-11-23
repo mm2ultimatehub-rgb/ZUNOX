@@ -140,7 +140,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.revanced.manager.flutter"
+        applicationId = "com.mm2ultimatehub.zunox"
 
         minSdk {
             version = release(26)
@@ -172,7 +172,7 @@ android {
 
         buildConfigField("String[]", "SUPPORTED_LOCALES", locales)
 
-        val deepLinkScheme = "revanced-manager"
+        val deepLinkScheme = "zunox-manager"
         manifestPlaceholders["deepLinkScheme"] = deepLinkScheme
 
         buildConfigField("String", "DEEP_LINK_SCHEME", "\"$deepLinkScheme\"")
