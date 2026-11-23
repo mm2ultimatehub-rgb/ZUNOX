@@ -14,7 +14,7 @@ Second \"item\" text"</string>
 
 -->
 <resources>
-  <string name="app_name">ReVanced Manager</string>
+  <string name="app_name">ZUNOX</string>
   <string name="patcher">Patcher</string>
   <string name="patches">Yamalar</string>
   <string name="cli">CLI</string>
@@ -443,7 +443,7 @@ Bu mənbədən əvvəlcədən quraşdırılmış tətbiqləri yeniləyə bilməy
   <string name="patches_delete_multiple_dialog_description">Seçilmiş yamaları silmək istədiyinizə əminsiniz?</string>
   <string name="announcements">Elanlar</string>
   <string name="archive">Arxiv</string>
-  <string name="about_revanced_manager">ReVanced Manager haqqında</string>
+  <string name="about_revanced_manager">ZUNOX haqqında</string>
   <string name="revanced_manager_description">ReVanced Manager, Android tətbiqlərini yamalamaq üçün ReVanced Patcher istifadə edən bir Android tətbiqidir. O, xüsusi yamalarla tətbiqləri yükləməyə və yamalamağa, həmçinin yamalanma prosesini idarə etməyə imkan verir.</string>
   <string name="developer_options_taps">%d toxunuş qalıb</string>
   <string name="developer_options_enabled">Tərtibatçı seçimləri aktivləşdirildi</string>
