@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/inspect_cairo_reference.yml"
       - "scripts/inspect_cairo_reference.sh"
+      - "scripts/validate_cairo_patch_shape.py"
 
 permissions:
   contents: read
