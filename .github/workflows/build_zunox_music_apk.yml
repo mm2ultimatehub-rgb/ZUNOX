@@ -19,7 +19,7 @@ on:
       - ".github/workflows/build_zunox_music_apk.yml"
 
 permissions:
-  contents: read
+  contents: write
   packages: read
 
 concurrency:
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   build:
-    name: Patch and sign YouTube Music 9.47.51 as ZUNOX
+    name: Patch and sign YouTube Music 9.47.51 base / ZUNOX 9.47.52 as ZUNOX
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ZUNOX
@@ -48,7 +48,7 @@ jobs:
       - name: Install Android SDK platform and build tools
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Download clean YouTube Music 9.47.51 ARM64 APK
+      - name: Download clean YouTube Music 9.47.51 base / ZUNOX 9.47.52 ARM64 APK
         shell: bash
         run: |
           set -euo pipefail
@@ -60,7 +60,7 @@ jobs:
           head -n 1 apk-metadata.txt
           grep -Fq "package: name='com.google.android.apps.youtube.music'" apk-metadata.txt
           grep -Fq "versionCode='94751240'" apk-metadata.txt
-          grep -Fq "versionName='9.47.51'" apk-metadata.txt
+          grep -Fq "versionName='9.47.52'" apk-metadata.txt
           sha256sum youtube-music-9.47.51-arm64.apk
 
       - name: Build JVM patch bundle and runner
@@ -113,33 +113,37 @@ jobs:
             --ks-key-alias "$KEYSTORE_ENTRY_ALIAS" \
             --ks-pass env:KEYSTORE_PASSWORD \
             --key-pass env:KEYSTORE_ENTRY_PASSWORD \
-            --out ZUNOX-Music-9.47.51-arm64.apk \
+            --out ZUNOX-Music-9.47.52-arm64.apk \
             zunox-music-aligned.apk
-          "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.51-arm64.apk
-          "$tools/aapt" dump badging ZUNOX-Music-9.47.51-arm64.apk > zunox-metadata.txt
-          grep -Fq "package: name='com.mm2ultimatehub.zunoxmusic'" zunox-metadata.txt
+          "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.52-arm64.apk
+          "$tools/aapt" dump badging ZUNOX-Music-9.47.52-arm64.apk > zunox-metadata.txt
+          grep -Fq "package: name='com.mm2ultimatehub.zunoxmusic.next'" zunox-metadata.txt
           grep -Fq "versionName='9.47.51'" zunox-metadata.txt
           grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
-          if unzip -Z1 ZUNOX-Music-9.47.51-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\.(png|webp)$'; then
+          if unzip -Z1 ZUNOX-Music-9.47.52-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\.(png|webp)$'; then
             echo "::error::Old density-specific YouTube Music branding resources remain."
             exit 1
           fi
           head -n 8 zunox-metadata.txt
 
-      - name: Upload signed ZUNOX Music APK
+      - name: Publish direct APK download on GitHub Releases
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: zunox-music-9.47.51-release
-          path: ZUNOX-Music-9.47.51-arm64.apk
-          if-no-files-found: error
-          retention-days: 14
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="zunox-music-9.47.52-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" ZUNOX-Music-9.47.52-arm64.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "ZUNOX Music 9.47.52" \
+            --notes "ZUNOX Music 9.47.52 (ARM64). Fresh package ID: com.mm2ultimatehub.zunoxmusic.next."
 
       - name: Upload unsigned debug preview
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v4
         with:
-          name: zunox-music-9.47.51-debug-preview
+          name: zunox-music-9.47.52-debug-preview
           path: zunox-music-unsigned.apk
           if-no-files-found: error
           retention-days: 7
