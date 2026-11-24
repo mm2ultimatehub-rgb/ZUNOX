@@ -59,6 +59,7 @@ apktool d --force --no-res "$MORPHE_APK" --output "$OUT/morphe-reference"
 } > "$OUT/REPORT.txt"
 
 python3 scripts/analyze_cairo_smali.py "$OUT" >> "$OUT/REPORT.txt"
+python3 scripts/validate_cairo_patch_shape.py "$OUT/clean" >> "$OUT/REPORT.txt"
 
 echo "Inspection report written to $OUT/REPORT.txt"
 
