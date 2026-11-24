@@ -24,8 +24,8 @@ curl --fail --location --retry 3 --retry-all-errors --output "$MORPHE_APK" "$MOR
 echo "$MORPHE_SHA256  $MORPHE_APK" | sha256sum --check -
 echo "Morphe reference SHA-256 verified: $MORPHE_SHA256"
 
-apktool d --force "$CLEAN_APK" --output "$OUT/clean"
-apktool d --force "$MORPHE_APK" --output "$OUT/morphe-reference"
+apktool d --force --no-res "$CLEAN_APK" --output "$OUT/clean"
+apktool d --force --no-res "$MORPHE_APK" --output "$OUT/morphe-reference"
 
 {
   echo "ZUNOX Cairo splash inspection — YouTube Music 9.30.53"
