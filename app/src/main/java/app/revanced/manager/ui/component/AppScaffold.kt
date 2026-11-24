@@ -20,6 +20,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -62,12 +63,11 @@ fun AppTopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     applyContainerColor: Boolean = false
 ) {
-    val containerColor = if (applyContainerColor) {
+    val glassBase = if (applyContainerColor) {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
     } else {
-        Color.Unspecified
+        MaterialTheme.colorScheme.surface
     }
-
     val glassShape = RoundedCornerShape(22.dp)
     TopAppBar(
         modifier = androidx.compose.ui.Modifier
@@ -76,7 +76,7 @@ fun AppTopBar(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        glassBase.copy(alpha = 0.82f),
                         MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.58f)
                     )
                 )
@@ -124,12 +124,11 @@ fun AppTopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     applyContainerColor: Boolean = false
 ) {
-    val containerColor = if (applyContainerColor) {
+    val glassBase = if (applyContainerColor) {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
     } else {
-        Color.Unspecified
+        MaterialTheme.colorScheme.surface
     }
-
     val glassShape = RoundedCornerShape(22.dp)
     TopAppBar(
         modifier = androidx.compose.ui.Modifier
@@ -138,7 +137,7 @@ fun AppTopBar(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        glassBase.copy(alpha = 0.82f),
                         MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.58f)
                     )
                 )
@@ -164,7 +163,8 @@ fun AppTopBar(
         },
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = containerColor
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
         )
     )
 }
