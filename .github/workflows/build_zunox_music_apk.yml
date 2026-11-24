@@ -115,7 +115,8 @@ jobs:
             --out ZUNOX-Music-9.47.51-arm64.apk \
             zunox-music-aligned.apk
           "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.51-arm64.apk
-          "$tools/aapt" dump badging ZUNOX-Music-9.47.51-arm64.apk | head -n 4
+          "$tools/aapt" dump badging ZUNOX-Music-9.47.51-arm64.apk > zunox-metadata.txt
+          head -n 4 zunox-metadata.txt
 
       - name: Upload signed ZUNOX Music APK
         if: ${{ github.event_name != 'pull_request' }}
