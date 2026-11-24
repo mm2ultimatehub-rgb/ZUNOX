@@ -16,13 +16,13 @@ fun main(args: Array<String>) {
     val patchBundle = File(args[1]).absoluteFile
     val output = File(args[2]).absoluteFile
     val sdkRoot = File(args[3]).absoluteFile
-    val aapt = sdkRoot.resolve("build-tools/36.0.0/aapt")
+    val aapt = sdkRoot.resolve("build-tools/36.0.0/aapt2")
     val frameworkDirectory = File("build/revanced-framework").absoluteFile
     val temporaryDirectory = File("build/revanced-patcher-temp").absoluteFile
 
     check(input.isFile) { "Input APK not found: $input" }
     check(patchBundle.isFile) { "Patch bundle not found: $patchBundle" }
-    check(aapt.isFile) { "Android aapt binary not found: $aapt" }
+    check(aapt.isFile) { "Android aapt2 binary not found: $aapt" }
 
     val patches = loadPatches(patchBundle) { file, error ->
         System.err.println("Failed to load patch bundle $file")
