@@ -1,0 +1,180 @@
+@file:Suppress("DEPRECATION")
+
+package app.zunox.patches.music
+
+import app.revanced.patcher.fingerprint
+import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
+import app.revanced.patcher.patch.PatchException
+import app.revanced.patcher.patch.bytecodePatch
+import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.ThreeRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.iface.reference.TypeReference
+
+private const val MUSIC_ACTIVITY =
+    "Lcom/google/android/apps/youtube/music/activities/MusicActivity;"
+private const val LOTTIE_VIEW =
+    "Lcom/airbnb/lottie/LottieAnimationView;"
+private const val LAYOUT_INFLATER =
+    "Landroid/view/LayoutInflater;"
+private const val VIEW =
+    "Landroid/view/View;"
+
+private fun Method.hasCairoStartupShape(): Boolean {
+    val instructions = implementation?.instructions ?: return false
+    val hasSetContentView = instructions.any { instruction ->
+        val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+        reference?.name == "setContentView"
+    }
+    val hasLottieCast = instructions.any { instruction ->
+        instruction.opcode == Opcode.CHECK_CAST &&
+            ((instruction as? ReferenceInstruction)?.reference as? TypeReference)?.type == LOTTIE_VIEW
+    }
+    return definingClass == MUSIC_ACTIVITY &&
+        name == "onCreate" &&
+        parameterTypes == listOf("Landroid/os/Bundle;") &&
+        returnType == "V" &&
+        hasSetContentView &&
+        hasLottieCast
+}
+
+private fun com.android.tools.smali.dexlib2.iface.instruction.Instruction.registersUsed(): List<Int> =
+    when (this) {
+        is FiveRegisterInstruction -> when (registerCount) {
+            1 -> listOf(registerC)
+            2 -> listOf(registerC, registerD)
+            3 -> listOf(registerC, registerD, registerE)
+            4 -> listOf(registerC, registerD, registerE, registerF)
+            else -> listOf(registerC, registerD, registerE, registerF, registerG)
+        }
+        is ThreeRegisterInstruction -> listOf(registerA, registerB, registerC)
+        is TwoRegisterInstruction -> listOf(registerA, registerB)
+        is OneRegisterInstruction -> listOf(registerA)
+        is RegisterRangeInstruction -> (startRegister until startRegister + registerCount).toList()
+        else -> emptyList()
+    }
+
+private val cairoSplashFingerprint = fingerprint {
+    returns("V")
+    parameters("Landroid/os/Bundle;")
+    strings("sa_e")
+    custom { method, _ -> method.hasCairoStartupShape() }
+}
+
+@Suppress("unused")
+val disableCairoSplashAnimationPatch = bytecodePatch(
+    name = "Disable Cairo splash animation",
+    description = "Hides the YouTube Music 9.30.53 Cairo splash overlay while preserving normal Activity startup."
+) {
+    compatibleWith(
+        "com.google.android.apps.youtube.music" to setOf("9.30.53")
+    )
+
+    apply {
+        val method = cairoSplashFingerprint.match().method
+        val instructions = method.implementation?.instructions
+            ?: throw PatchException("MusicActivity.onCreate has no bytecode implementation.")
+
+        val lottieCastIndex = instructions.indexOfFirst { instruction ->
+            instruction.opcode == Opcode.CHECK_CAST &&
+                ((instruction as? ReferenceInstruction)?.reference as? TypeReference)?.type == LOTTIE_VIEW
+        }
+        if (lottieCastIndex < 0) {
+            throw PatchException("Could not find the Cairo LottieAnimationView cast.")
+        }
+
+        val lottieRegister = (instructions[lottieCastIndex] as OneRegisterInstruction).registerA
+
+        val findViewIndex = (lottieCastIndex - 1 downTo 0).firstOrNull { index ->
+            val reference = (instructions[index] as? ReferenceInstruction)?.reference as? MethodReference
+            reference?.name == "findViewById" &&
+                reference.definingClass == VIEW &&
+                reference.returnType == VIEW
+        } ?: throw PatchException("Could not locate the Cairo overlay findViewById call.")
+
+        val findViewCall = instructions[findViewIndex] as? FiveRegisterInstruction
+            ?: throw PatchException("Cairo findViewById call has an unexpected register format.")
+        if (findViewCall.registerCount != 2) {
+            throw PatchException("Cairo findViewById call does not have the expected receiver/ID arguments.")
+        }
+        val overlayRootRegister = findViewCall.registerC
+
+        val rootResultIndex = (findViewIndex - 1 downTo 0).firstOrNull { index ->
+            val instruction = instructions[index]
+            instruction.opcode == Opcode.MOVE_RESULT_OBJECT &&
+                (instruction as? OneRegisterInstruction)?.registerA == overlayRootRegister
+        } ?: throw PatchException("Could not locate the Cairo overlay root view result.")
+
+        val inflateIndex = rootResultIndex - 1
+        val inflateReference = (instructions.getOrNull(inflateIndex) as? ReferenceInstruction)
+            ?.reference as? MethodReference
+            ?: throw PatchException("Could not locate the Cairo overlay inflate call.")
+        if (
+            inflateReference.definingClass != LAYOUT_INFLATER ||
+            inflateReference.name != "inflate" ||
+            inflateReference.parameterTypes != listOf("I", "Landroid/view/ViewGroup;") ||
+            inflateReference.returnType != VIEW
+        ) {
+            throw PatchException("The Cairo overlay is no longer inflated using the expected LayoutInflater overload.")
+        }
+
+        val inflateCall = instructions[inflateIndex] as? FiveRegisterInstruction
+            ?: throw PatchException("The Cairo overlay inflate call has an unexpected register format.")
+        if (inflateCall.registerCount != 3) {
+            throw PatchException("The Cairo overlay inflate call does not have the expected three registers.")
+        }
+
+        // The third inflate argument is the null ViewGroup parameter. It is dead after inflate returns.
+        // Reuse it for View.GONE, but fail closed if the expected register layout changes.
+        val visibilityRegister = inflateCall.registerE
+        val nullInitializer = instructions.getOrNull(inflateIndex - 1) as? OneRegisterInstruction
+        if (
+            nullInitializer == null ||
+            nullInitializer.registerA != visibilityRegister ||
+            instructions[inflateIndex - 1].opcode != Opcode.CONST_4
+        ) {
+            throw PatchException("Could not verify the temporary visibility register.")
+        }
+
+        if (overlayRootRegister > 15 || visibilityRegister > 15) {
+            throw PatchException("Cairo overlay registers exceed the safe 4-bit instruction range.")
+        }
+
+        // Ensure the reused null-argument register is not read before a later wide constant overwrites it.
+        var tempRegisterSafelyReleased = false
+        for (index in rootResultIndex + 1 until instructions.size) {
+            val instruction = instructions[index]
+            val writesFollowingWideWord =
+                instruction.opcode.name.startsWith("CONST_WIDE") &&
+                    (instruction as? OneRegisterInstruction)?.registerA == visibilityRegister - 1
+            if (writesFollowingWideWord) {
+                tempRegisterSafelyReleased = true
+                break
+            }
+            if (visibilityRegister in instruction.registersUsed()) {
+                throw PatchException("Temporary visibility register is read before it is overwritten.")
+            }
+        }
+        if (!tempRegisterSafelyReleased) {
+            throw PatchException("Could not prove the temporary visibility register is safe to reuse.")
+        }
+
+        method.addInstructions(
+            rootResultIndex + 1,
+            """
+                const/4 v$visibilityRegister, 0x8
+                invoke-virtual {v$overlayRootRegister, v$visibilityRegister}, Landroid/view/View;->setVisibility(I)V
+            """.trimIndent()
+        )
+
+        if (lottieRegister == overlayRootRegister) {
+            throw PatchException("Unexpected Cairo overlay root/Lottie register alias.")
+        }
+    }
+}
