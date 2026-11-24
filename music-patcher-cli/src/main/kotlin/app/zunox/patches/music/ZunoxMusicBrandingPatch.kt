@@ -64,8 +64,8 @@ private val zunoxMonochromeLogo = """
 """.trimIndent()
 
 /**
- * Gives the patched music app a ZUNOX identity while retaining the original
- * package identifier required by the target app's existing service integration.
+ * Gives the patched music app an isolated ZUNOX application identity and
+ * replaces its launcher and in-app brand resources.
  */
 val zunoxMusicBrandingPatch = resourcePatch(
     name = "ZUNOX app identity",
@@ -93,8 +93,8 @@ val zunoxMusicBrandingPatch = resourcePatch(
             manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserMaxSdkVersion")
             manifest.documentElement.removeAttribute("android:sharedUserMaxSdkVersion")
 
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751242")
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.53")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751243")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.54")
 
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
