@@ -1,5 +1,7 @@
 package app.revanced.manager.ui.component.patches
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +73,23 @@ fun PatchItem(
     ListItem(
         modifier = Modifier
             .let { if (!compatible) it.alpha(0.5f) else it }
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+                ),
+                RoundedCornerShape(20.dp)
+            )
             .clickable(enabled = !readOnly, onClick = onToggle)
             .fillMaxSize(),
         leadingContent = {
