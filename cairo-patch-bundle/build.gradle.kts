@@ -32,14 +32,14 @@ dependencies {
 val bundleStaging = layout.buildDirectory.dir("bundle-staging")
 tasks.register<Exec>("extractPatchDex") {
     dependsOn("assembleDebug")
-    val apk = layout.buildDirectory.file("outputs/apk/debug/cairo-patch-bundle-debug.apk")
+    val apkDirectory = layout.buildDirectory.dir("outputs/apk/debug")
     val dex = bundleStaging.map { it.file("classes.dex") }
-    inputs.file(apk)
+    inputs.dir(apkDirectory)
     outputs.file(dex)
     doFirst { bundleStaging.get().asFile.mkdirs() }
     commandLine(
         "bash", "-lc",
-        "unzip -p '${apk.get().asFile.absolutePath}' classes.dex > '${dex.get().asFile.absolutePath}'"
+        "apk=$(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit); test -n \"$apk\"; unzip -p \"$apk\" classes.dex > '${dex.get().asFile.absolutePath}'"
     )
 }
 tasks.register<Zip>("packagePatchBundle") {
