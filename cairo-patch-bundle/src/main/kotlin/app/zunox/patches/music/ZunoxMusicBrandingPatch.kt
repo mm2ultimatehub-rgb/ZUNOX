@@ -71,6 +71,7 @@ val zunoxMusicBrandingPatch = resourcePatch(
     description = "Replaces the launcher name, launcher icon, and music header marks with ZUNOX branding."
 ) {
     compatibleWith(TARGET_PACKAGE to setOf(TARGET_VERSION))
+    dependsOn(disableCairoSplashAnimationPatch)
 
     apply {
         // Update the Android launcher label and icon without changing the package ID.
@@ -117,10 +118,16 @@ val zunoxMusicBrandingPatch = resourcePatch(
                 .takeIf { it == "drawable" || it == "mipmap" }
         }.toSet() + "drawable"
 
+        val generatedHeaderPaths = headerResourceNames.flatMap { name ->
+            resourceTypes.map { type -> "res/$type/$name.xml" }
+        }.toSet()
+
         matchingFiles.forEach { file ->
             val relativePath = file.relativeTo(resourceRoot.parentFile).path
                 .replace(File.separatorChar, '/')
-            delete(relativePath)
+            if (relativePath !in generatedHeaderPaths) {
+                delete(relativePath)
+            }
         }
 
         headerResourceNames.forEach { name ->
