@@ -62,3 +62,24 @@ older literal-based matcher works unchanged.
 The next inspection artifact now includes the complete clean and Morphe
 `MusicActivity.onCreate(Bundle)` method bodies, not only marker lines. This will be used to
 identify a minimal, fail-closed insertion point before writing the bytecode patch.
+
+## ZUNOX-native patch implementation
+
+A standalone patch bundle project has now been added under `cairo-patch-bundle/`. It uses the
+same ReVanced Patcher Android `22.0.2-dev.1` API as the manager, with a compile-only dependency
+so the host's Patcher runtime is not duplicated.
+
+The patch locates the clean APK's `MusicActivity.onCreate(Bundle)` using the exact package,
+method signature, `sa_e` string, `setContentView`, and Lottie view cast. It follows the Lottie
+view's parent lookup back to the second `LayoutInflater.inflate` result, verifies the temporary
+register is dead until a later wide-constant write, and sets the overlay root to
+`View.GONE` before the view is attached to the content hierarchy. It does not skip
+`Activity.onCreate` or add a Morphe runtime dependency.
+
+The patch bundle is fail-closed: if the method signature, Lottie hierarchy, inflate overload,
+register layout, or temporary-register safety check differs, patching throws a clear
+`PatchException` instead of changing an uncertain instruction sequence.
+
+The GitHub Actions workflow `Build ZUNOX Cairo Patch Bundle` is compiling this isolated bundle.
+A successful bundle build is not yet proof of successful patch application or device startup;
+those remain required validation gates.
