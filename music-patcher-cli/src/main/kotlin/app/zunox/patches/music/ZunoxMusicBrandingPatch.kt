@@ -17,35 +17,18 @@ private val zunoxMusicLogo = """
         android:height="256dp"
         android:viewportWidth="256"
         android:viewportHeight="256">
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#9EB4C5"
-            android:strokeWidth="12"
-            android:pathData="M128,18 A110,110 0,1 1,127.9,18" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#EAF3F8"
-            android:strokeWidth="5"
-            android:pathData="M128,31 A97,97 0,1 1,127.9,31" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#71899C"
-            android:strokeWidth="19"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
+        <path android:fillColor="#00000000" android:strokeColor="#AFC4D3"
+            android:strokeWidth="13" android:pathData="M128,20 A108,108 0,1 1,127.9,20" />
+        <path android:fillColor="#00000000" android:strokeColor="#EAF3F8"
+            android:strokeWidth="4" android:pathData="M128,32 A96,96 0,1 1,127.9,32" />
+        <path android:fillColor="#00000000" android:strokeColor="#71899C"
+            android:strokeWidth="21" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,137 C52,137 54,91 79,91 C105,91 98,174 128,174 C158,174 151,72 179,72 C207,72 201,137 237,137" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#F8FCFF"
-            android:strokeWidth="10"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
+        <path android:fillColor="#00000000" android:strokeColor="#C7D9E5"
+            android:strokeWidth="12" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,128 C52,128 54,82 79,82 C105,82 98,165 128,165 C158,165 151,63 179,63 C207,63 201,128 237,128" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#C5D7E4"
-            android:strokeWidth="4"
-            android:strokeLineCap="round"
+        <path android:fillColor="#00000000" android:strokeColor="#F8FCFF"
+            android:strokeWidth="3.5" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,123 C52,123 54,77 79,77 C105,77 98,160 128,160 C158,160 151,58 179,58 C207,58 201,123 237,123" />
     </vector>
 """.trimIndent()
