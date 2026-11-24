@@ -83,8 +83,18 @@ val zunoxMusicBrandingPatch = resourcePatch(
             // Give ZUNOX its own Android application ID so it can coexist with
             // the official YouTube Music installation on the same device.
             manifest.documentElement.setAttribute("package", ZUNOX_PACKAGE)
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751241")
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.52")
+
+            // The original YouTube Music APK may request Google's shared UID.
+            // A third-party release key cannot join that UID, so Android rejects
+            // installation with a package/signature conflict even after renaming
+            // the package. ZUNOX must use its own isolated application UID.
+            manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserId")
+            manifest.documentElement.removeAttribute("android:sharedUserId")
+            manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserMaxSdkVersion")
+            manifest.documentElement.removeAttribute("android:sharedUserMaxSdkVersion")
+
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751242")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.53")
 
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
