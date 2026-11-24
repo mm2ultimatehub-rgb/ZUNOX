@@ -39,5 +39,6 @@ jobs:
             cairo-reference-report/REPORT.txt
             cairo-reference-report/FINGERPRINT_EVIDENCE.txt
             cairo-reference-report/METHOD_DUMP.txt
+            cairo-reference-report/PATCH_SHAPE_VALIDATION.txt
           if-no-files-found: warn
           retention-days: 14
