@@ -9,6 +9,7 @@ import java.io.File
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
 private const val TARGET_VERSION = "9.47.51"
+private const val ZUNOX_PACKAGE = "com.zunox.music"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -16,35 +17,18 @@ private val zunoxMusicLogo = """
         android:height="256dp"
         android:viewportWidth="256"
         android:viewportHeight="256">
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#9EB4C5"
-            android:strokeWidth="12"
-            android:pathData="M128,18 A110,110 0,1 1,127.9,18" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#EAF3F8"
-            android:strokeWidth="5"
-            android:pathData="M128,31 A97,97 0,1 1,127.9,31" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#71899C"
-            android:strokeWidth="19"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
+        <path android:fillColor="#00000000" android:strokeColor="#AFC4D3"
+            android:strokeWidth="13" android:pathData="M128,20 A108,108 0,1 1,127.9,20" />
+        <path android:fillColor="#00000000" android:strokeColor="#EAF3F8"
+            android:strokeWidth="4" android:pathData="M128,32 A96,96 0,1 1,127.9,32" />
+        <path android:fillColor="#00000000" android:strokeColor="#71899C"
+            android:strokeWidth="21" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,137 C52,137 54,91 79,91 C105,91 98,174 128,174 C158,174 151,72 179,72 C207,72 201,137 237,137" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#F8FCFF"
-            android:strokeWidth="10"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
+        <path android:fillColor="#00000000" android:strokeColor="#C7D9E5"
+            android:strokeWidth="12" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,128 C52,128 54,82 79,82 C105,82 98,165 128,165 C158,165 151,63 179,63 C207,63 201,128 237,128" />
-        <path
-            android:fillColor="#00000000"
-            android:strokeColor="#C5D7E4"
-            android:strokeWidth="4"
-            android:strokeLineCap="round"
+        <path android:fillColor="#00000000" android:strokeColor="#F8FCFF"
+            android:strokeWidth="3.5" android:strokeLineCap="round" android:strokeLineJoin="round"
             android:pathData="M19,123 C52,123 54,77 79,77 C105,77 98,160 128,160 C158,160 151,58 179,58 C207,58 201,123 237,123" />
     </vector>
 """.trimIndent()
@@ -63,8 +47,8 @@ private val zunoxMonochromeLogo = """
 """.trimIndent()
 
 /**
- * Gives the patched music app a ZUNOX identity while retaining the original
- * package identifier required by the target app's existing service integration.
+ * Gives the patched music app an isolated ZUNOX application identity and
+ * replaces its launcher and in-app brand resources.
  */
 val zunoxMusicBrandingPatch = resourcePatch(
     name = "ZUNOX app identity",
@@ -79,9 +63,78 @@ val zunoxMusicBrandingPatch = resourcePatch(
             val application = manifest.getElementsByTagName("application").item(0) as? Element
                 ?: throw IllegalStateException("AndroidManifest application element was not found.")
 
+            // Give ZUNOX its own Android application ID so it can coexist with
+            // the official YouTube Music installation on the same device.
+            manifest.documentElement.setAttribute("package", ZUNOX_PACKAGE)
+
+            // The original YouTube Music APK may request Google's shared UID.
+            // A third-party release key cannot join that UID, so Android rejects
+            // installation with a package/signature conflict even after renaming
+            // the package. ZUNOX must use its own isolated application UID.
+            manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserId")
+            manifest.documentElement.removeAttribute("android:sharedUserId")
+            manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserMaxSdkVersion")
+            manifest.documentElement.removeAttribute("android:sharedUserMaxSdkVersion")
+
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751243")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.54")
+
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:roundIcon", "@mipmap/zunox_launcher")
+
+            // Rewrite provider authorities explicitly using both namespace-aware
+            // and qualified-name access. Android treats authorities as globally
+            // unique, so leaving even one Google authority causes install conflicts.
+            val providers = manifest.getElementsByTagName("provider")
+            for (index in 0 until providers.length) {
+                val provider = providers.item(index) as? Element ?: continue
+                val raw = if (provider.hasAttributeNS(ANDROID_NAMESPACE, "authorities")) {
+                    provider.getAttributeNS(ANDROID_NAMESPACE, "authorities")
+                } else {
+                    provider.getAttribute("android:authorities")
+                }
+                if (raw.isNotBlank()) {
+                    val rewritten = raw.split(';').joinToString(";") { authority ->
+                        if (authority == TARGET_PACKAGE || authority.startsWith("$TARGET_PACKAGE.")) {
+                            ZUNOX_PACKAGE + authority.removePrefix(TARGET_PACKAGE)
+                        } else authority
+                    }
+                    provider.setAttributeNS(ANDROID_NAMESPACE, "android:authorities", rewritten)
+                    provider.setAttribute("android:authorities", rewritten)
+                }
+            }
+
+            // Provider authorities and custom permission names must also be unique.
+            val nodes = manifest.getElementsByTagName("*")
+            for (index in 0 until nodes.length) {
+                val element = nodes.item(index) as? Element ?: continue
+                // Android package-scoped declarations must be isolated from Google
+                // and from every previous ZUNOX package. Authorities may contain
+                // multiple semicolon-separated values; rewrite every occurrence.
+                for (attribute in listOf(
+                    "authorities", "permission", "readPermission", "writePermission",
+                    "taskAffinity", "name"
+                )) {
+                    if (!element.hasAttributeNS(ANDROID_NAMESPACE, attribute)) continue
+                    if (attribute == "name" &&
+                        element.tagName !in setOf(
+                            "permission", "uses-permission", "uses-permission-sdk-23",
+                            "uses-permission-sdk-m"
+                        )
+                    ) continue
+
+                    val oldValue = element.getAttributeNS(ANDROID_NAMESPACE, attribute)
+                    val rewritten = oldValue.split(';').joinToString(";") { entry ->
+                        if (entry == TARGET_PACKAGE || entry.startsWith("$TARGET_PACKAGE.")) {
+                            ZUNOX_PACKAGE + entry.removePrefix(TARGET_PACKAGE)
+                        } else entry
+                    }
+                    if (rewritten != oldValue) {
+                        element.setAttributeNS(ANDROID_NAMESPACE, "android:$attribute", rewritten)
+                    }
+                }
+            }
         }
 
         // Replace app-name strings in every available locale.
