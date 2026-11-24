@@ -100,6 +100,28 @@ val zunoxMusicBrandingPatch = resourcePatch(
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:roundIcon", "@mipmap/zunox_launcher")
 
+            // Rewrite provider authorities explicitly using both namespace-aware
+            // and qualified-name access. Android treats authorities as globally
+            // unique, so leaving even one Google authority causes install conflicts.
+            val providers = manifest.getElementsByTagName("provider")
+            for (index in 0 until providers.length) {
+                val provider = providers.item(index) as? Element ?: continue
+                val raw = if (provider.hasAttributeNS(ANDROID_NAMESPACE, "authorities")) {
+                    provider.getAttributeNS(ANDROID_NAMESPACE, "authorities")
+                } else {
+                    provider.getAttribute("android:authorities")
+                }
+                if (raw.isNotBlank()) {
+                    val rewritten = raw.split(';').joinToString(";") { authority ->
+                        if (authority == TARGET_PACKAGE || authority.startsWith("$TARGET_PACKAGE.")) {
+                            ZUNOX_PACKAGE + authority.removePrefix(TARGET_PACKAGE)
+                        } else authority
+                    }
+                    provider.setAttributeNS(ANDROID_NAMESPACE, "android:authorities", rewritten)
+                    provider.setAttribute("android:authorities", rewritten)
+                }
+            }
+
             // Provider authorities and custom permission names must also be unique.
             val nodes = manifest.getElementsByTagName("*")
             for (index in 0 until nodes.length) {
