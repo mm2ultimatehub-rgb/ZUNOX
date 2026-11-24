@@ -10,6 +10,19 @@
 - The current Morphe-derived fingerprint narrows the match to `Lcom/google/android/apps/youtube/music/activities/MusicActivity;->onCreate(Landroid/os/Bundle;)V`, requires the `sa_e` string, and additionally checks for a `setContentView` call plus either literal `45635386` or the `main_activity_launch_animation` resource ID. This is a useful implementation reference, but it is not proof that the exact fingerprint matches every 9.30.53 APK build.
 - ZUNOX loads external patch JARs through ReVanced Patcher Android `22.0.2-dev.1`. Morphe Patcher is a different implementation/namespace and is not a drop-in dependency.
 
+## Reference APK now wired into GitHub Actions
+
+A reproducible inspection path has been added to this branch:
+
+- `scripts/inspect_cairo_reference.sh` downloads the pinned 9.30.53 ARM64 Morphe build from the public release repository.
+- It verifies the pinned SHA-256 before decoding.
+- `.github/workflows/inspect_cairo_reference.yml` runs APKTool and uploads the decoded-reference report as a GitHub Actions artifact named `cairo-reference-inspection`.
+- Pinned reference asset: `yt-music-morphe-v9.30.53-arm64-v8a.apk`
+- Expected SHA-256: `e099ed21019240fd29234effa1dd16ad005d13605a31757699ff4d22254ee257`
+- Upstream release: `https://github.com/znarfm/revanced-apks/releases/tag/66`
+
+**Important:** this asset is already Morphe-patched. It is useful for inspecting the injected Cairo implementation and comparing bytecode, but it is not a clean Google APK and must not be treated as the base input for a ZUNOX patch build. The inspection workflow does not claim to prove a clean-APK fingerprint match.
+
 ## Implementation direction
 
 Build a small ZUNOX-native patch bundle against the exact ReVanced Patcher version used by the app. Avoid migrating the manager to Morphe Patcher.
@@ -18,13 +31,14 @@ Prefer a minimal in-place edit of the target startup layout/view that suppresses
 
 ## Required verification before release
 
-1. Port the fingerprint and bytecode edit to ReVanced Patcher 22.0.2-dev.1 without importing Morphe-only APIs.
-2. Compile the patch bundle against ReVanced Patcher 22.0.2-dev.1.
-3. Confirm the fingerprint matches the actual YouTube Music 9.30.53 APK, not just a version string.
-4. Apply the patch to a clean 9.30.53 APK and verify the app starts, loads its home screen, and plays audio.
-5. Confirm the Cairo animation is absent and no blank overlay or startup hang remains.
-6. Run ZUNOX's Android release build and publish an APK only after the build succeeds.
+1. Run the new `Inspect YouTube Music 9.30.53 Cairo reference` workflow and inspect its artifact.
+2. Obtain a clean 9.30.53 APK and verify the fingerprint against its DEX; do not use the Morphe-patched reference as a clean base.
+3. Port the fingerprint and bytecode edit to ReVanced Patcher 22.0.2-dev.1 without importing Morphe-only APIs.
+4. Compile the patch bundle against ReVanced Patcher 22.0.2-dev.1.
+5. Apply the patch to a clean 9.30.53 APK and verify the app starts, loads its home screen, and plays audio.
+6. Confirm the Cairo animation is absent and no blank overlay or startup hang remains.
+7. Run ZUNOX's Android release build and publish an APK only after the build succeeds.
 
 ## Safety boundary
 
-This is a research/implementation note, not a claim that the patch has been implemented or tested. No APK is produced by this document.
+This is a research/automation improvement, not a claim that the Cairo patch has been implemented or tested. No ZUNOX APK is produced by this document or the reference-inspection workflow.
