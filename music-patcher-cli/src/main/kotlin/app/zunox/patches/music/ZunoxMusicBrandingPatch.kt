@@ -9,7 +9,7 @@ import java.io.File
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
 private const val TARGET_VERSION = "9.47.51"
-private const val ZUNOX_PACKAGE = "com.mm2ultimatehub.zunoxmusic"
+private const val ZUNOX_PACKAGE = "com.mm2ultimatehub.zunoxmusic.next"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -83,6 +83,8 @@ val zunoxMusicBrandingPatch = resourcePatch(
             // Give ZUNOX its own Android application ID so it can coexist with
             // the official YouTube Music installation on the same device.
             manifest.documentElement.setAttribute("package", ZUNOX_PACKAGE)
+            manifest.documentElement.setAttribute("android:versionCode", "94751241")
+            manifest.documentElement.setAttribute("android:versionName", "9.47.52")
 
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
