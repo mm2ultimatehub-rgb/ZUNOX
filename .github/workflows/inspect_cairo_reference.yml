@@ -1,4 +1,4 @@
-name: Inspect YouTube Music 9.30.53 Cairo reference
+name: Inspect YouTube Music 9.47.51 Cairo reference
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   inspect-reference:
-    name: Download and inspect pinned Morphe reference APK
+    name: Download and inspect clean YouTube Music 9.47.51 APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ZUNOX
@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes apktool
 
-      - name: Inspect pinned YouTube Music 9.30.53 reference
+      - name: Inspect clean YouTube Music 9.47.51 APK
         run: |
           chmod +x scripts/inspect_cairo_reference.sh
           scripts/inspect_cairo_reference.sh
@@ -40,7 +40,6 @@ jobs:
             cairo-reference-report/REPORT.txt
             cairo-reference-report/FINGERPRINT_EVIDENCE.txt
             cairo-reference-report/METHOD_DUMP.txt
-            cairo-reference-report/PATCH_SHAPE_VALIDATION.txt
             cairo-reference-report/PATCH_SHAPE_VALIDATION.txt
           if-no-files-found: warn
           retention-days: 14
