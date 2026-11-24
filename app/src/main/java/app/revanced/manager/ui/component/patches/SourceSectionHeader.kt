@@ -3,6 +3,8 @@ package app.revanced.manager.ui.component.patches
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -20,6 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -61,6 +66,23 @@ fun SourceSectionHeader(
         ListItem(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+                    ),
+                    RoundedCornerShape(20.dp)
+                )
                 .clickable(onClick = onClick),
             leadingContent = {
                 HapticTriStateCheckbox(
@@ -132,10 +154,7 @@ fun SourceSectionHeader(
                     }
                 }
             },
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
-        HorizontalDivider()
     }
 }
