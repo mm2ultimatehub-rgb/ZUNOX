@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: zunox-apk-${{ github.ref }}
@@ -95,7 +96,9 @@ jobs:
             echo "APK: $apk"
             sha256sum "$apk"
             if [ "${{ github.event_name == 'workflow_dispatch' && inputs.signing_mode == 'release' }}" = "true" ]; then
-              apksigner verify --verbose "$apk"
+              signer="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+              test -n "$signer"
+              "$signer" verify --verbose "$apk"
             fi
           done
 
