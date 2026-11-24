@@ -11,6 +11,7 @@ import app.revanced.com.android.tools.smali.dexlib2.iface.Method
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.Instruction
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.ThreeRegisterInstruction
@@ -112,13 +113,26 @@ val disableCairoSplashAnimationPatch = bytecodePatch(
         // The third inflate argument is the null ViewGroup parameter. It is dead after inflate returns.
         // Reuse it for View.GONE, but fail closed if the expected register layout changes.
         val visibilityRegister = inflateCall.registerE
-        val nullInitializer = instructions.getOrNull(inflateIndex - 1) as? OneRegisterInstruction
+        // The target APK initializes this null ViewGroup register before the first
+        // overlay inflate and reuses it for the second inflate. Find its latest write.
+        val nullInitializerIndex = (inflateIndex - 1 downTo 0).firstOrNull { index ->
+            val candidate = instructions[index] as? OneRegisterInstruction
+            candidate?.registerA == visibilityRegister
+        } ?: throw PatchException("Could not locate the null ViewGroup register initialization.")
+
+        val nullInitializer = instructions[nullInitializerIndex] as? NarrowLiteralInstruction
         if (
-            nullInitializer == null ||
-            nullInitializer.registerA != visibilityRegister ||
-            instructions[inflateIndex - 1].opcode != Opcode.CONST_4
+            instructions[nullInitializerIndex].opcode != Opcode.CONST_4 ||
+            nullInitializer?.literal != 0
         ) {
-            throw PatchException("Could not verify the temporary visibility register.")
+            throw PatchException("The temporary ViewGroup register is not initialized to null.")
+        }
+
+        for (index in nullInitializerIndex + 1 until inflateIndex) {
+            val candidate = instructions[index] as? OneRegisterInstruction
+            if (candidate?.registerA == visibilityRegister) {
+                throw PatchException("The null ViewGroup register is overwritten before the Cairo inflate call.")
+            }
         }
 
         if (overlayRootRegister > 15 || visibilityRegister > 15) {
