@@ -6,17 +6,17 @@ import app.revanced.patcher.firstMethodOrNull
 import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
 import app.revanced.patcher.patch.PatchException
 import app.revanced.patcher.patch.bytecodePatch
-import com.android.tools.smali.dexlib2.Opcode
-import com.android.tools.smali.dexlib2.iface.Method
-import com.android.tools.smali.dexlib2.iface.instruction.Instruction
-import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.ThreeRegisterInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
-import com.android.tools.smali.dexlib2.iface.reference.MethodReference
-import com.android.tools.smali.dexlib2.iface.reference.TypeReference
+import app.revanced.com.android.tools.smali.dexlib2.Opcode
+import app.revanced.com.android.tools.smali.dexlib2.iface.Method
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.Instruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.ThreeRegisterInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
+import app.revanced.com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import app.revanced.com.android.tools.smali.dexlib2.iface.reference.TypeReference
 
 private const val MUSIC_ACTIVITY =
     "Lcom/google/android/apps/youtube/music/activities/MusicActivity;"
