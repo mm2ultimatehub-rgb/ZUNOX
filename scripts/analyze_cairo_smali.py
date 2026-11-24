@@ -21,7 +21,7 @@ MARKERS = {
 }
 out = []
 method_dump = []
-for variant in ("clean", "morphe-reference"):
+for variant in ("clean",):
     matches = list((ROOT / variant).rglob("MusicActivity.smali"))
     out.append(f"===== {variant} =====")
     method_dump.append(f"===== {variant} =====")
