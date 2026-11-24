@@ -58,15 +58,15 @@ private fun Method.hasCairoStartupShape(): Boolean {
 @Suppress("unused")
 val disableCairoSplashAnimationPatch = bytecodePatch(
     name = "Disable Cairo splash animation",
-    description = "Hides the YouTube Music 9.30.53 Cairo splash overlay while preserving normal Activity startup."
+    description = "Hides the YouTube Music 9.47.51 Cairo splash overlay while preserving normal Activity startup."
 ) {
     compatibleWith(
-        "com.google.android.apps.youtube.music" to setOf("9.30.53")
+        "com.google.android.apps.youtube.music" to setOf("9.47.51")
     )
 
     apply {
         val method = classDefs.firstMethodOrNull("sa_e") { hasCairoStartupShape() }
-            ?: throw PatchException("Could not uniquely locate MusicActivity.onCreate(Bundle) for YouTube Music 9.30.53.")
+            ?: throw PatchException("Could not uniquely locate MusicActivity.onCreate(Bundle) for YouTube Music 9.47.51.")
         val instructions = method.implementation?.instructions
             ?: throw PatchException("MusicActivity.onCreate has no bytecode implementation.")
 
@@ -148,23 +148,26 @@ val disableCairoSplashAnimationPatch = bytecodePatch(
             throw PatchException("Cairo overlay registers exceed the safe 4-bit instruction range.")
         }
 
-        // Ensure the reused null-argument register is not read before a later wide constant overwrites it.
-        var tempRegisterSafelyReleased = false
-        for (index in rootResultIndex + 1 until instructions.size) {
+        // The inflate parent register is null and becomes dead after inflate returns.
+        // Prove it is not read before the first instruction that overwrites it.
+        val firstOverwriteIndex = (rootResultIndex + 1 until instructions.size).firstOrNull { index ->
             val instruction = instructions[index]
-            val writesFollowingWideWord =
-                instruction.opcode.name.startsWith("CONST_WIDE") &&
-                    (instruction as? OneRegisterInstruction)?.registerA == visibilityRegister - 1
-            if (writesFollowingWideWord) {
-                tempRegisterSafelyReleased = true
-                break
-            }
-            if (instruction.usesRegister(visibilityRegister)) {
+            val registerWrite = instruction as? OneRegisterInstruction
+            registerWrite?.registerA == visibilityRegister &&
+                (
+                    instruction.opcode.name.startsWith("MOVE_RESULT") ||
+                        instruction.opcode.name.startsWith("CONST") ||
+                        instruction.opcode.name == "MOVE_EXCEPTION" ||
+                        instruction.opcode.name == "NEW_INSTANCE" ||
+                        instruction.opcode.name == "NEW_ARRAY" ||
+                        instruction.opcode.name.startsWith("SGET")
+                    )
+        } ?: throw PatchException("Could not prove the temporary visibility register is overwritten.")
+
+        for (index in rootResultIndex + 1 until firstOverwriteIndex) {
+            if (instructions[index].usesRegister(visibilityRegister)) {
                 throw PatchException("Temporary visibility register is read before it is overwritten.")
             }
-        }
-        if (!tempRegisterSafelyReleased) {
-            throw PatchException("Could not prove the temporary visibility register is safe to reuse.")
         }
 
         method.addInstructions(
