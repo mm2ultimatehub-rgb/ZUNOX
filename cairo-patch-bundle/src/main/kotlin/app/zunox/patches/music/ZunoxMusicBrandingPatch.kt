@@ -103,11 +103,26 @@ val zunoxMusicBrandingPatch = resourcePatch(
                 }
             }
 
-        // Replace the known YouTube Music header wordmark resources with the ZUNOX mark.
-        val headerResourceNames = setOf("logo_music", "ytm_logo", "action_bar_logo")
+        // Replace the exact YouTube Music logo resources present in 9.47.51.
+        val colorBrandResources = setOf(
+            "action_bar_logo_release",
+            "action_bar_logo_ringo2",
+            "action_bar_logo_ringo3",
+            "ytm_logo_ringo2",
+            "youtube_music_logo_short",
+            "splash_screen",
+            "audio_banner_app_icon",
+            "widget_default_icon"
+        )
+        val monochromeBrandResources = setOf(
+            "ic_app_icons_themed_youtube_music",
+            "ic_stat_ytmusic_white",
+            "music_push_notification_white"
+        )
+        val brandResourceNames = colorBrandResources + monochromeBrandResources
         val matchingFiles = resourceRoot.walkTopDown()
             .filter { file ->
-                file.isFile && headerResourceNames.any { name ->
+                file.isFile && brandResourceNames.any { name ->
                     file.name == name || file.name.startsWith("$name.")
                 }
             }
@@ -118,23 +133,31 @@ val zunoxMusicBrandingPatch = resourcePatch(
                 .takeIf { it == "drawable" || it == "mipmap" }
         }.toSet() + "drawable"
 
-        val generatedHeaderPaths = headerResourceNames.flatMap { name ->
+        val generatedBrandPaths = brandResourceNames.flatMap { name ->
             resourceTypes.map { type -> "res/$type/$name.xml" }
         }.toSet()
 
         matchingFiles.forEach { file ->
             val relativePath = file.relativeTo(resourceRoot.parentFile).path
                 .replace(File.separatorChar, '/')
-            if (relativePath !in generatedHeaderPaths) {
+            if (relativePath !in generatedBrandPaths) {
                 delete(relativePath)
             }
         }
 
-        headerResourceNames.forEach { name ->
+        colorBrandResources.forEach { name ->
             resourceTypes.forEach { type ->
                 val output = get("res/$type/$name.xml")
                 output.parentFile.mkdirs()
                 output.writeText(zunoxMusicLogo)
+            }
+        }
+
+        monochromeBrandResources.forEach { name ->
+            resourceTypes.forEach { type ->
+                val output = get("res/$type/$name.xml")
+                output.parentFile.mkdirs()
+                output.writeText(zunoxMonochromeLogo)
             }
         }
 
