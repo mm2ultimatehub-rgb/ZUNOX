@@ -56,7 +56,8 @@ jobs:
             --output youtube-music-9.47.51-arm64.apk \
             "https://d.apkpure.net/b/APK/com.google.android.apps.youtube.music?nc=arm64-v8a&sv=32&versionCode=94751240"
           aapt="$ANDROID_HOME/build-tools/36.0.0/aapt"
-          "$aapt" dump badging youtube-music-9.47.51-arm64.apk | head -n 1 | tee apk-metadata.txt
+          "$aapt" dump badging youtube-music-9.47.51-arm64.apk > apk-metadata.txt
+          head -n 1 apk-metadata.txt
           grep -Fq "package: name='com.google.android.apps.youtube.music'" apk-metadata.txt
           grep -Fq "versionCode='94751240'" apk-metadata.txt
           grep -Fq "versionName='9.47.51'" apk-metadata.txt
@@ -119,30 +120,7 @@ jobs:
           grep -Fq "package: name='com.google.android.apps.youtube.music'" zunox-metadata.txt
           grep -Fq "versionName='9.47.51'" zunox-metadata.txt
           grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
-          if unzip -Z1 ZUNOX-Music-9.47.51-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\\.(png|webp)
-
-      - name: Upload signed ZUNOX Music APK
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: zunox-music-9.47.51-release
-          path: ZUNOX-Music-9.47.51-arm64.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload unsigned debug preview
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: zunox-music-9.47.51-debug-preview
-          path: zunox-music-unsigned.apk
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Remove temporary signing material
-        if: always()
-        run: rm -f zunox-release.jks
-; then
+          if unzip -Z1 ZUNOX-Music-9.47.51-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\.(png|webp)$'; then
             echo "::error::Old density-specific YouTube Music branding resources remain."
             exit 1
           fi
