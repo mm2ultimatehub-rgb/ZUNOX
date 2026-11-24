@@ -127,6 +127,9 @@ val zunoxMusicBrandingPatch = resourcePatch(
                 }
             }
             .toList()
+        if (matchingFiles.isEmpty()) {
+            throw IllegalStateException("YouTube Music 9.47.51 branding resources were not found.")
+        }
 
         val resourceTypes = matchingFiles.mapNotNull { file ->
             file.parentFile.name.substringBefore('-')
@@ -142,6 +145,10 @@ val zunoxMusicBrandingPatch = resourcePatch(
                 .replace(File.separatorChar, '/')
             if (relativePath !in generatedBrandPaths) {
                 delete(relativePath)
+                // Ensure density-qualified source files are physically removed as well.
+                if (file.exists() && !file.delete()) {
+                    throw IllegalStateException("Could not remove old YouTube Music logo: $relativePath")
+                }
             }
         }
 
