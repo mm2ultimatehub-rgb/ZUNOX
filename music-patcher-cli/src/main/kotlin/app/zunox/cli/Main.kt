@@ -18,19 +18,19 @@ private fun sanitizeInvalidResourceNames(resourceDirectory: File) {
         if ('$' !in oldName) return@forEach
 
         val normalized = oldName.lowercase().replace(Regex("[^a-z0-9_]"), "_")
-        val baseName = "zunox_\${normalized}"
+        val baseName = "zunox_${normalized}"
         var newName = baseName
         var suffix = 1
         val extension = file.extension.takeIf { it.isNotEmpty() }?.let { ".$it" } ?: ""
 
         while (File(file.parentFile, "$newName$extension").exists()) {
-            newName = "\${baseName}_$suffix"
+            newName = "${baseName}_$suffix"
             suffix++
         }
 
         val renamedFile = File(file.parentFile, "$newName$extension")
         check(file.renameTo(renamedFile)) {
-            "Could not normalize invalid Android resource filename: \${file.path}"
+            "Could not normalize invalid Android resource filename: ${file.path}"
         }
         renameMap[oldName] = newName
     }
@@ -55,7 +55,7 @@ private fun sanitizeInvalidResourceNames(resourceDirectory: File) {
             xmlFile.writeText(xml)
         }
 
-    println("Normalized \${renameMap.size} invalid resource filenames before AAPT2 compilation.")
+    println("Normalized ${renameMap.size} invalid resource filenames before AAPT2 compilation.")
 }
 
 fun main(args: Array<String>) {
@@ -98,16 +98,16 @@ fun main(args: Array<String>) {
                     (versions == null || versionName in versions)
             }
         }.also { selected ->
-            println("Compatible patches: \${selected.joinToString { it.name.orEmpty() }}")
+            println("Compatible patches: ${selected.joinToString { it.name.orEmpty() }}")
         }
     }
 
     val result = applyPatches { patchResult ->
         val error = patchResult.exception
         if (error == null) {
-            println("PATCH OK: \${patchResult.patch.name}")
+            println("PATCH OK: ${patchResult.patch.name}")
         } else {
-            System.err.println("PATCH FAILED: \${patchResult.patch.name}")
+            System.err.println("PATCH FAILED: ${patchResult.patch.name}")
             error.printStackTrace()
             patchFailure = error
         }
