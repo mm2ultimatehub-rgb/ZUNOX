@@ -129,7 +129,7 @@ jobs:
           # Component class names may retain the upstream Java namespace.
           # Only globally scoped authorities and custom permission identifiers
           # must be renamed to avoid Android package/provider collisions.
-          if grep -E 'android:(authorities|permission|readPermission|writePermission).*com\\.google\\.android\\.apps\\.youtube\\.music' zunox-manifest-tree.txt; then
+          if grep -E 'android:(authorities|permission|readPermission|writePermission).*com\.google\.android\.apps\.youtube\.music' zunox-manifest-tree.txt; then
             echo "::error::Google provider authority or custom permission remains in the ZUNOX APK."
             exit 1
           fi
