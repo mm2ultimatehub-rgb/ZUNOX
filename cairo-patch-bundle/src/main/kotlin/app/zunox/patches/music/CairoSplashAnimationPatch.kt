@@ -132,7 +132,7 @@ val disableCairoSplashAnimationPatch = bytecodePatch(
         val nullInitializer = instructions[nullInitializerIndex] as? NarrowLiteralInstruction
         if (
             instructions[nullInitializerIndex].opcode != Opcode.CONST_4 ||
-            nullInitializer?.literal != 0
+            nullInitializer?.narrowLiteral != 0L
         ) {
             throw PatchException("The temporary ViewGroup register is not initialized to null.")
         }
