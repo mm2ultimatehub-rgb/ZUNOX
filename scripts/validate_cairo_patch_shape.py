@@ -92,26 +92,31 @@ for i in range(null_init_index + 1, inflate_index):
     if re.match(rf"^\s*[a-z0-9/-]+\s+v{temp_reg}(?:,|\s|$)", body[i]):
         fail(f"Temporary null register v{temp_reg} is overwritten before Cairo inflate at method line {i + 1}")
 
-wide_reuse_index = None
+safe_overwrite_index = None
+write_pattern = re.compile(
+    r"^\s*(?:move-result(?:-wide|-object)?|move-exception|const(?:/(?:4|16|high16))?|"
+    r"const-wide(?:/(?:16|32|high16))?|const-string(?:/jumbo)?|const-class|"
+    r"new-instance|new-array|sget(?:-wide|-object|-boolean|-byte|-char|-short)?)\s+v(\d+)\b"
+)
 for i in range(root_result_index + 1, len(body)):
     line = body[i]
-    wide = re.search(r"\bconst-wide(?:/16|/32)? v(\d+),", line)
-    if wide and int(wide.group(1)) + 1 == temp_reg:
-        wide_reuse_index = i
+    write = write_pattern.search(line)
+    if write and int(write.group(1)) == temp_reg:
+        safe_overwrite_index = i
         break
     if re.search(rf"\bv{temp_reg}\b", line):
-        fail(f"Temporary register v{temp_reg} is used before it is safely overwritten at method line {i + 1}")
-if wide_reuse_index is None:
-    fail(f"No later wide constant safely overwrites v{temp_reg}")
+        fail(f"Temporary register v{temp_reg} is read before its first overwrite at method line {i + 1}")
+if safe_overwrite_index is None:
+    fail(f"No later instruction safely overwrites v{temp_reg}")
 
 report = [
-    "PASS: clean YouTube Music 9.30.53 Cairo patch shape verified",
+    "PASS: clean YouTube Music 9.47.51 Cairo patch shape verified",
     f"Activity method: {target}",
     f"Overlay root register: v{root_reg}",
     f"Lottie child register: v{lottie_reg}",
     f"Reusable null-argument register: v{temp_reg}",
     f"Overlay root result line in method: {root_result_index + 1}",
-    f"Safe wide-register overwrite line in method: {wide_reuse_index + 1}",
+    f"First safe overwrite line in method: {safe_overwrite_index + 1}",
     "Injection: const/4 vTEMP, 0x8; invoke-virtual {vROOT, vTEMP}, View.setVisibility(I)",
     "The overlay is hidden before it is attached; Activity startup and Lottie callbacks remain intact.",
 ]
