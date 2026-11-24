@@ -7,6 +7,57 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+private fun sanitizeInvalidResourceNames(resourceDirectory: File) {
+    if (!resourceDirectory.isDirectory) return
+
+    val renameMap = linkedMapOf<String, String>()
+    val resourceFiles = resourceDirectory.walkTopDown().filter { it.isFile }.toList()
+
+    resourceFiles.forEach { file ->
+        val oldName = file.nameWithoutExtension
+        if (oldName.matches(Regex("[a-z][a-z0-9_]*"))) return@forEach
+
+        val normalized = oldName.lowercase().replace(Regex("[^a-z0-9_]"), "_")
+        val baseName = "zunox_$normalized"
+        var newName = baseName
+        var suffix = 1
+        val extension = file.extension.takeIf { it.isNotEmpty() }?.let { ".$it" } ?: ""
+
+        while (File(file.parentFile, "$newName$extension").exists()) {
+            newName = "${baseName}_$suffix"
+            suffix++
+        }
+
+        val renamedFile = File(file.parentFile, "$newName$extension")
+        check(file.renameTo(renamedFile)) {
+            "Could not normalize invalid Android resource filename: ${file.path}"
+        }
+        renameMap[oldName] = newName
+    }
+
+    if (renameMap.isEmpty()) return
+
+    val referenceTypes = listOf(
+        "drawable", "mipmap", "anim", "animator", "raw", "xml",
+        "layout", "menu", "color", "interpolator", "font", "transition", "navigation"
+    )
+    resourceDirectory.walkTopDown()
+        .filter { it.isFile && it.extension.equals("xml", ignoreCase = true) }
+        .toList()
+        .forEach { xmlFile ->
+            var xml = xmlFile.readText()
+            renameMap.forEach { (oldName, newName) ->
+                referenceTypes.forEach { type ->
+                    xml = xml.replace("@$type/$oldName", "@$type/$newName")
+                }
+                xml = xml.replace("name=\"$oldName\"", "name=\"$newName\"")
+            }
+            xmlFile.writeText(xml)
+        }
+
+    println("Normalized ${renameMap.size} invalid resource filenames before AAPT2 compilation.")
+}
+
 fun main(args: Array<String>) {
     require(args.size == 4) {
         "Usage: <input.apk> <patches.jar> <output.apk> <android-sdk-root>"
@@ -63,6 +114,14 @@ fun main(args: Array<String>) {
     }
 
     patchFailure?.let { throw IllegalStateException("ZUNOX patching failed.", it) }
+
+    // Apktool exposes a few framework animation resources with '
+    println("Patched APK written to $output")
+}
+ in their
+    // generated filenames. AAPT2 rejects those names, so normalize filenames
+    // and every XML/public.xml reference before the resource table is rebuilt.
+    sanitizeInvalidResourceNames(File(temporaryDirectory, "apk/res"))
 
     output.parentFile?.mkdirs()
     Files.copy(input.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING)
