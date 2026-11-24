@@ -61,3 +61,7 @@ apktool d --force --no-res "$MORPHE_APK" --output "$OUT/morphe-reference"
 python3 scripts/analyze_cairo_smali.py "$OUT" >> "$OUT/REPORT.txt"
 
 echo "Inspection report written to $OUT/REPORT.txt"
+
+# Keep only the small, reviewable text reports in the uploaded artifact.
+rm -rf "$OUT/clean" "$OUT/morphe-reference"
+rm -f "$CLEAN_APK" "$MORPHE_APK"
