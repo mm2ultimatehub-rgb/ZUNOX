@@ -121,6 +121,7 @@ jobs:
           grep -Fq "versionName='9.47.54'" zunox-metadata.txt
           grep -Fq "versionCode='94751243'" zunox-metadata.txt
           grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
+          grep -Fq "application: label='ZUNOX' icon='0x" zunox-metadata.txt
           "$tools/aapt" dump xmltree ZUNOX-Music-9.47.54-arm64.apk AndroidManifest.xml > zunox-manifest-tree.txt
           if grep -qi 'sharedUserId' zunox-manifest-tree.txt; then
             echo "::error::Google sharedUserId remains; this APK cannot install with the ZUNOX release key."
