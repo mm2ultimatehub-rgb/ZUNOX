@@ -14,6 +14,14 @@ dependencies {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xskip-prerelease-check",
+            "-Xallow-unstable-dependencies",
+            "-Xexplicit-backing-fields",
+            "-Xcontext-parameters"
+        )
+    }
 }
 
 application {
