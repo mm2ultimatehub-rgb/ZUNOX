@@ -24,6 +24,16 @@ body = lines[start + 1:end]
 def fail(message):
     raise SystemExit("FAIL: " + message)
 
+def is_instruction(line):
+    value = line.strip()
+    return bool(value) and not value.startswith((".", ":", "#"))
+
+def previous_instruction(index):
+    return next((i for i in range(index - 1, -1, -1) if is_instruction(body[i])), None)
+
+def next_instruction(index):
+    return next((i for i in range(index + 1, len(body)) if is_instruction(body[i])), None)
+
 def regs(text):
     return [int(value) for value in re.findall(r"\bv(\d+)\b", text)]
 
@@ -46,17 +56,20 @@ if len(find_regs) != 2:
     fail("findViewById does not have the expected receiver and ID registers")
 root_reg = find_regs[0]
 
-if lottie_index != find_index + 2 or "move-result-object" not in body[find_index + 1]:
-    fail("Lottie lookup is no longer the expected findViewById/move-result/check-cast sequence")
-if regs(body[find_index + 1]) != [lottie_reg]:
+lottie_result_index = next_instruction(find_index)
+if lottie_result_index is None or "move-result-object" not in body[lottie_result_index]:
+    fail("findViewById is not followed by move-result-object")
+if regs(body[lottie_result_index]) != [lottie_reg]:
     fail("Lottie lookup result register differs from its cast register")
+if next_instruction(lottie_result_index) != lottie_index:
+    fail("Lottie result is not immediately followed by its expected check-cast")
 
 root_result_index = next((i for i in range(find_index - 1, -1, -1)
                           if re.search(rf"\bmove-result-object v{root_reg}\b", body[i])), None)
 if root_result_index is None:
     fail("Overlay root move-result-object not found")
-inflate_index = root_result_index - 1
-if inflate_index < 0 or "Landroid/view/LayoutInflater;->inflate(ILandroid/view/ViewGroup;)Landroid/view/View;" not in body[inflate_index]:
+inflate_index = previous_instruction(root_result_index)
+if inflate_index is None or "Landroid/view/LayoutInflater;->inflate(ILandroid/view/ViewGroup;)Landroid/view/View;" not in body[inflate_index]:
     fail("Overlay root is not returned by the expected LayoutInflater.inflate overload")
 
 inflate_match = re.search(r"invoke-virtual \{([^}]+)\}", body[inflate_index])
@@ -71,8 +84,8 @@ if temp_reg > 15 or root_reg > 15:
 if temp_reg == lottie_reg or root_reg == lottie_reg:
     fail("Unexpected register alias between overlay root, null argument, and Lottie child")
 
-null_init_index = inflate_index - 1
-if null_init_index < 0 or not re.search(rf"\bconst/4 v{temp_reg},\s*0x0\b", body[null_init_index]):
+null_init_index = previous_instruction(inflate_index)
+if null_init_index is None or not re.search(rf"\bconst/4 v{temp_reg},\s*0x0\b", body[null_init_index]):
     fail("Inflate ViewGroup argument is not initialized to null in the expected register")
 
 wide_reuse_index = None
