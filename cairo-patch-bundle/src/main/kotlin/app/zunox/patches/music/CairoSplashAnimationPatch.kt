@@ -2,12 +2,12 @@
 
 package app.zunox.patches.music
 
-import app.revanced.patcher.fingerprint
+import app.revanced.patcher.firstMethodOrNull
 import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
 import app.revanced.patcher.patch.PatchException
 import app.revanced.patcher.patch.bytecodePatch
 import com.android.tools.smali.dexlib2.Opcode
-import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.Instruction
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -26,47 +26,6 @@ private const val LAYOUT_INFLATER =
 private const val VIEW =
     "Landroid/view/View;"
 
-private fun Method.hasCairoStartupShape(): Boolean {
-    val instructions = implementation?.instructions ?: return false
-    val hasSetContentView = instructions.any { instruction ->
-        val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
-        reference?.name == "setContentView"
-    }
-    val hasLottieCast = instructions.any { instruction ->
-        instruction.opcode == Opcode.CHECK_CAST &&
-            ((instruction as? ReferenceInstruction)?.reference as? TypeReference)?.type == LOTTIE_VIEW
-    }
-    return definingClass == MUSIC_ACTIVITY &&
-        name == "onCreate" &&
-        parameterTypes == listOf("Landroid/os/Bundle;") &&
-        returnType == "V" &&
-        hasSetContentView &&
-        hasLottieCast
-}
-
-private fun com.android.tools.smali.dexlib2.iface.instruction.Instruction.registersUsed(): List<Int> =
-    when (this) {
-        is FiveRegisterInstruction -> when (registerCount) {
-            1 -> listOf(registerC)
-            2 -> listOf(registerC, registerD)
-            3 -> listOf(registerC, registerD, registerE)
-            4 -> listOf(registerC, registerD, registerE, registerF)
-            else -> listOf(registerC, registerD, registerE, registerF, registerG)
-        }
-        is ThreeRegisterInstruction -> listOf(registerA, registerB, registerC)
-        is TwoRegisterInstruction -> listOf(registerA, registerB)
-        is OneRegisterInstruction -> listOf(registerA)
-        is RegisterRangeInstruction -> (startRegister until startRegister + registerCount).toList()
-        else -> emptyList()
-    }
-
-private val cairoSplashFingerprint = fingerprint {
-    returns("V")
-    parameters("Landroid/os/Bundle;")
-    strings("sa_e")
-    custom { method, _ -> method.hasCairoStartupShape() }
-}
-
 @Suppress("unused")
 val disableCairoSplashAnimationPatch = bytecodePatch(
     name = "Disable Cairo splash animation",
@@ -77,7 +36,8 @@ val disableCairoSplashAnimationPatch = bytecodePatch(
     )
 
     apply {
-        val method = cairoSplashFingerprint.match().method
+        val method = classDefs.firstMethodOrNull("sa_e") { hasCairoStartupShape() }
+            ?: throw PatchException("Could not uniquely locate MusicActivity.onCreate(Bundle) for YouTube Music 9.30.53.")
         val instructions = method.implementation?.instructions
             ?: throw PatchException("MusicActivity.onCreate has no bytecode implementation.")
 
