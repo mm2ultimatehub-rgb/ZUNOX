@@ -1,6 +1,6 @@
 # ZUNOX Cairo splash patch bundle
 
-This isolated Android build produces a ReVanced Patcher-compatible patch bundle JAR for YouTube Music **9.30.53**.
+This isolated Android build produces a ReVanced Patcher-compatible patch bundle JAR for YouTube Music **9.47.51**.
 
 ## Patch behavior
 
