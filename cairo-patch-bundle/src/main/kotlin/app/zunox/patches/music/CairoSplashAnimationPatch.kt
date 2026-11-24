@@ -28,6 +28,15 @@ private const val LAYOUT_INFLATER =
 private const val VIEW =
     "Landroid/view/View;"
 
+private fun Instruction.usesRegister(register: Int): Boolean = when (this) {
+    is FiveRegisterInstruction -> register in listOf(registerC, registerD, registerE, registerF, registerG).take(registerCount)
+    is RegisterRangeInstruction -> register in startRegister until (startRegister + registerCount)
+    is ThreeRegisterInstruction -> register == registerA || register == registerB || register == registerC
+    is TwoRegisterInstruction -> register == registerA || register == registerB
+    is OneRegisterInstruction -> register == registerA
+    else -> false
+}
+
 private fun Method.hasCairoStartupShape(): Boolean {
     val instructions = implementation?.instructions ?: return false
     val hasSetContentView = instructions.any { instruction ->
@@ -150,7 +159,7 @@ val disableCairoSplashAnimationPatch = bytecodePatch(
                 tempRegisterSafelyReleased = true
                 break
             }
-            if (visibilityRegister in instruction.registersUsed()) {
+            if (visibilityRegister in instruction.usesRegister(visibilityRegister)) {
                 throw PatchException("Temporary visibility register is read before it is overwritten.")
             }
         }
