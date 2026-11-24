@@ -60,7 +60,7 @@ jobs:
           unzip -l "$bundle"
           unzip -l "$bundle" | grep -q 'classes.dex'
           unzip -p "$bundle" META-INF/MANIFEST.MF | grep -q 'ZUNOX Cairo Splash Patch'
-          unzip -p "$bundle" classes.dex | strings | grep -q 'Disable Cairo splash animation'
+          unzip -p "$bundle" classes.dex | strings | grep -q 'Could not uniquely locate MusicActivity.onCreate'
 
       - name: Upload patch bundle
         uses: actions/upload-artifact@v4
