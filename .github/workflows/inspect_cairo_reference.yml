@@ -38,5 +38,6 @@ jobs:
           path: |
             cairo-reference-report/REPORT.txt
             cairo-reference-report/FINGERPRINT_EVIDENCE.txt
+            cairo-reference-report/METHOD_DUMP.txt
           if-no-files-found: warn
           retention-days: 14
