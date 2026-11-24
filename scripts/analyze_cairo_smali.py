@@ -20,9 +20,11 @@ MARKERS = {
     "app_launch": re.compile(r'"app_launch"'),
 }
 out = []
+method_dump = []
 for variant in ("clean", "morphe-reference"):
     matches = list((ROOT / variant).rglob("MusicActivity.smali"))
     out.append(f"===== {variant} =====")
+    method_dump.append(f"===== {variant} =====")
     if not matches:
         out.append("MusicActivity.smali: NOT FOUND")
         continue
@@ -33,11 +35,14 @@ for variant in ("clean", "morphe-reference"):
             continue
         methods = list(METHOD.finditer(text))
         out.append(f"File: {file}")
+        method_dump.append(f"File: {file}")
         out.append(f"onCreate(Bundle) matches: {len(methods)}")
         for index, match in enumerate(methods, 1):
             body = match.group(1)
             found = {name: bool(pattern.search(body)) for name, pattern in MARKERS.items()}
             out.append(f"Candidate {index}: {found}")
+            method_dump.append(f"--- onCreate candidate {index} ---")
+            method_dump.extend(f"{line_no:04d}: {line}" for line_no, line in enumerate(body.splitlines(), 1))
             for line_no, line in enumerate(body.splitlines(), 1):
                 if any(pattern.search(line) for pattern in MARKERS.values()):
                     out.append(f"  {line_no}: {line.strip()}")
@@ -45,4 +50,7 @@ for variant in ("clean", "morphe-reference"):
             out.append("No exact onCreate(Bundle):V method found.")
 out_path = ROOT / "FINGERPRINT_EVIDENCE.txt"
 out_path.write_text("\n".join(out) + "\n", encoding="utf-8")
+dump_path = ROOT / "METHOD_DUMP.txt"
+dump_path.write_text("\n".join(method_dump) + "\n", encoding="utf-8")
 print(out_path.read_text(encoding="utf-8"))
+print(f"Full method dump written to {dump_path}")
