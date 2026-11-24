@@ -48,19 +48,173 @@ tasks.register<Exec>("extractPatchDex") {
     dependsOn("assembleDebug")
 
     val apkDirectory = layout.buildDirectory.dir("outputs/apk/debug")
-    val dexFile = bundleStaging.map { it.file("classes.dex") }
+    val dexDirectory = bundleStaging
 
     inputs.dir(apkDirectory)
-    outputs.file(dexFile)
+    outputs.dir(dexDirectory)
 
     doFirst {
-        bundleStaging.get().asFile.mkdirs()
+        dexDirectory.get().asFile.mkdirs()
     }
 
     commandLine(
         "bash",
         "-lc",
-        "set -euo pipefail; apk=\$(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit); test -n \"\$apk\"; unzip -p \"\$apk\" classes.dex > '${dexFile.get().asFile.absolutePath}'"
+        """
+            set -euo pipefail
+            apk=${'(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit)
+            test -n "\${'$'}apk"
+            staging='${dexDirectory.get().asFile.absolutePath}'
+            rm -f "\${'$'}staging"/classes*.dex
+            mapfile -t dex_entries < <(unzip -Z1 "\${'$'}apk" | grep -E '^classes([0-9]+)?\\.dex\${'$'}')
+            if [ "\${'$'}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit)
+            test -n "${'apk"
+            staging='${dexDirectory.get().asFile.absolutePath}'
+            rm -f "\${'$'}staging"/classes*.dex
+            mapfile -t dex_entries < <(unzip -Z1 "\${'$'}apk" | grep -E '^classes([0-9]+)?\\.dex\${'$'}')
+            if [ "\${'$'}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}apk"
+            staging='${dexDirectory.get().asFile.absolutePath}'
+            rm -f "${'staging"/classes*.dex
+            mapfile -t dex_entries < <(unzip -Z1 "\${'$'}apk" | grep -E '^classes([0-9]+)?\\.dex\${'$'}')
+            if [ "\${'$'}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}staging"/classes*.dex
+            mapfile -t dex_entries < <(unzip -Z1 "${'apk" | grep -E '^classes([0-9]+)?\\.dex\${'$'}')
+            if [ "\${'$'}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}apk" | grep -E '^classes([0-9]+)?\\.dex${'')
+            if [ "\${'$'}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}')
+            if [ "${'{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "\${'$'}{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}{#dex_entries[@]}" -eq 0 ]; then
+                echo "No DEX files found in patch bundle APK."
+                exit 1
+            fi
+            for dex in "${'{dex_entries[@]}"; do
+                unzip -p "\${'$'}apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}{dex_entries[@]}"; do
+                unzip -p "${'apk" "\${'$'}dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}apk" "${'dex" > "\${'$'}staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}dex" > "${'staging/\${'$'}dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}staging/${'dex"
+                test -s "\${'$'}staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}dex"
+                test -s "${'staging/\${'$'}dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}staging/${'dex"
+                echo "Extracted \${'$'}dex"
+            done
+        """.trimIndent()
+    )
+}
+}dex"
+                echo "Extracted ${'dex"
+            done
+        """.trimIndent()
+    )
+}
+}dex"
+            done
+        """.trimIndent()
     )
 }
 
