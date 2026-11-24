@@ -13,16 +13,18 @@ curl --fail --location --retry 3 --retry-all-errors --output "$CLEAN_APK" "$CLEA
 echo "Downloaded APK SHA-256:"
 sha256sum "$CLEAN_APK"
 
-apktool d --force --no-res "$CLEAN_APK" --output "$OUT/clean"
-
-grep -q 'package="com.google.android.apps.youtube.music"' "$OUT/clean/AndroidManifest.xml" || {
+BADGING="$(aapt dump badging "$CLEAN_APK")"
+printf '%s\n' "$BADGING" | head -n 1
+grep -Fq "package: name='com.google.android.apps.youtube.music'" <<< "$BADGING" || {
   echo "::error::Downloaded APK package does not match YouTube Music."
   exit 1
 }
-grep -q 'versionName="9.47.51"' "$OUT/clean/AndroidManifest.xml" || {
+grep -Fq "versionName='9.47.51'" <<< "$BADGING" || {
   echo "::error::Downloaded APK version is not 9.47.51."
   exit 1
 }
+
+apktool d --force --no-res "$CLEAN_APK" --output "$OUT/clean"
 
 {
   echo "ZUNOX Cairo splash inspection — YouTube Music 9.47.51"
