@@ -25,7 +25,7 @@ grep -Fq "versionName='9.47.51'" <<< "$BADGING" || {
 }
 
 aapt dump resources "$CLEAN_APK" > "$OUT/RESOURCE_TABLE.txt"
-grep -niE 'logo|music|icon|splash|launch|brand|app_name|youtube' "$OUT/RESOURCE_TABLE.txt" | head -n 200 > "$OUT/RESOURCE_EVIDENCE.txt" || true
+grep -niE ':(drawable|mipmap|raw|layout|xml|id)/[^[:space:]]*(logo|icon|splash|launch|brand|header|music)|:string/[^[:space:]]*(app_name|app_launcher_name|youtube|music)' "$OUT/RESOURCE_TABLE.txt" | head -n 300 > "$OUT/RESOURCE_EVIDENCE.txt" || true
 
 apktool d --force --no-res "$CLEAN_APK" --output "$OUT/clean"
 
