@@ -24,12 +24,18 @@ grep -Fq "versionName='9.47.51'" <<< "$BADGING" || {
   exit 1
 }
 
+aapt dump resources "$CLEAN_APK" > "$OUT/RESOURCE_TABLE.txt"
+grep -niE 'logo|music|icon|splash|launch|brand|app_name|youtube' "$OUT/RESOURCE_TABLE.txt" | head -n 200 > "$OUT/RESOURCE_EVIDENCE.txt" || true
+
 apktool d --force --no-res "$CLEAN_APK" --output "$OUT/clean"
 
 {
   echo "ZUNOX Cairo splash inspection — YouTube Music 9.47.51"
   echo "Clean APK: $CLEAN_APK"
   echo "Clean APK SHA-256: $(sha256sum "$CLEAN_APK" | cut -d' ' -f1)"
+  echo
+  echo "Resource identity candidates:"
+  cat "$OUT/RESOURCE_EVIDENCE.txt"
   echo
   echo "Manifest package/version:"
   grep -n -E 'package=|versionName|versionCode' "$OUT/clean/AndroidManifest.xml" || true
