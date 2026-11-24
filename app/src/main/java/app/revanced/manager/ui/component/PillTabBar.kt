@@ -7,6 +7,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +38,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -68,7 +70,24 @@ fun PillTabBar(
         modifier = modifier
             .height(PillTabBarDefaults.ContainerHeight)
             .clip(CircleShape)
-            .background(colors.containerColor)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        colors.containerColor.copy(alpha = 0.72f),
+                        colors.containerColor.copy(alpha = 0.42f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.30f),
+                        Color.White.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = CircleShape
+            )
             .padding(PillTabBarDefaults.ContainerPadding)
     ) {
         val indicatorWidthPx = with(LocalDensity.current) { maxWidth.toPx() } / tabCount
@@ -177,7 +196,19 @@ private fun PillTabIndicator(
                 transformOrigin = transformOriginForIndex(currentPage, tabCount)
             }
             .clip(CircleShape)
-            .background(color)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        color.copy(alpha = 0.96f),
+                        color.copy(alpha = 0.72f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.28f),
+                shape = CircleShape
+            )
     )
 }
 
