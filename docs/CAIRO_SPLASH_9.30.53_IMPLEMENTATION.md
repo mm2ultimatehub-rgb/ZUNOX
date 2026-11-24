@@ -14,14 +14,15 @@
 
 A reproducible inspection path has been added to this branch:
 
-- `scripts/inspect_cairo_reference.sh` downloads the pinned 9.30.53 ARM64 Morphe build from the public release repository.
-- It verifies the pinned SHA-256 before decoding.
-- `.github/workflows/inspect_cairo_reference.yml` runs APKTool and uploads the decoded-reference report as a GitHub Actions artifact named `cairo-reference-inspection`.
-- Pinned reference asset: `yt-music-morphe-v9.30.53-arm64-v8a.apk`
-- Expected SHA-256: `e099ed21019240fd29234effa1dd16ad005d13605a31757699ff4d22254ee257`
-- Upstream release: `https://github.com/znarfm/revanced-apks/releases/tag/66`
+- `scripts/inspect_cairo_reference.sh` downloads and SHA-256-verifies two APKs, then decodes both with APKTool.
+- Clean Google-signed 9.30.53 ARM64 APK: APKPure download endpoint, versionCode `93053240`, SHA-256 `1fe8d535ae445265c7250ed76a24c340e1dc89f2ab5d265f755800fe23ad334e`.
+- Morphe-patched comparison APK: `yt-music-morphe-v9.30.53-arm64-v8a.apk`, SHA-256 `e099ed21019240fd29234effa1dd16ad005d13605a31757699ff4d22254ee257`.
+- `.github/workflows/inspect_cairo_reference.yml` runs APKTool and uploads both decoded folders and a focused `REPORT.txt` as the `cairo-reference-inspection` GitHub Actions artifact.
+- The report extracts `MusicActivity.onCreate(Bundle)` evidence from the clean APK and the Morphe comparison, including `sa_e`, `setContentView`, `main_activity_launch_animation`, and Cairo flag references.
+- APKMirror lists the same Google-signed build as version `9.30.53` / `93053240`, arm64-v8a, nodpi, Android 8.0+, and provides the Google signing certificate fingerprint. The exact APKPure file hash is pinned above.
+- Upstream Morphe comparison release: `https://github.com/znarfm/revanced-apks/releases/tag/66`.
 
-**Important:** this asset is already Morphe-patched. It is useful for inspecting the injected Cairo implementation and comparing bytecode, but it is not a clean Google APK and must not be treated as the base input for a ZUNOX patch build. The inspection workflow does not claim to prove a clean-APK fingerprint match.
+**Important:** the Morphe asset is already patched and is comparison material only. The clean APK download is the intended fingerprint-validation input; the workflow must pass both SHA checks before decoding either file.
 
 ## Implementation direction
 
