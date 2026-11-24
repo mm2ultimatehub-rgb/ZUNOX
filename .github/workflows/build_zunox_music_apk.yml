@@ -116,7 +116,37 @@ jobs:
             zunox-music-aligned.apk
           "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.51-arm64.apk
           "$tools/aapt" dump badging ZUNOX-Music-9.47.51-arm64.apk > zunox-metadata.txt
-          head -n 4 zunox-metadata.txt
+          grep -Fq "package: name='com.google.android.apps.youtube.music'" zunox-metadata.txt
+          grep -Fq "versionName='9.47.51'" zunox-metadata.txt
+          grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
+          if unzip -Z1 ZUNOX-Music-9.47.51-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\\.(png|webp)
+
+      - name: Upload signed ZUNOX Music APK
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zunox-music-9.47.51-release
+          path: ZUNOX-Music-9.47.51-arm64.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload unsigned debug preview
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zunox-music-9.47.51-debug-preview
+          path: zunox-music-unsigned.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f zunox-release.jks
+; then
+            echo "::error::Old density-specific YouTube Music branding resources remain."
+            exit 1
+          fi
+          head -n 8 zunox-metadata.txt
 
       - name: Upload signed ZUNOX Music APK
         if: ${{ github.event_name != 'pull_request' }}
