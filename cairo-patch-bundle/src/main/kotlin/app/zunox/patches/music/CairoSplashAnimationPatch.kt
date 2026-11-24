@@ -7,6 +7,7 @@ import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
 import app.revanced.patcher.patch.PatchException
 import app.revanced.patcher.patch.bytecodePatch
 import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.Instruction
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -25,6 +26,24 @@ private const val LAYOUT_INFLATER =
     "Landroid/view/LayoutInflater;"
 private const val VIEW =
     "Landroid/view/View;"
+
+private fun Method.hasCairoStartupShape(): Boolean {
+    val instructions = implementation?.instructions ?: return false
+    val hasSetContentView = instructions.any { instruction ->
+        val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+        reference?.name == "setContentView"
+    }
+    val hasLottieCast = instructions.any { instruction ->
+        instruction.opcode == Opcode.CHECK_CAST &&
+            ((instruction as? ReferenceInstruction)?.reference as? TypeReference)?.type == LOTTIE_VIEW
+    }
+    return definingClass == MUSIC_ACTIVITY &&
+        name == "onCreate" &&
+        parameterTypes == listOf("Landroid/os/Bundle;") &&
+        returnType == "V" &&
+        hasSetContentView &&
+        hasLottieCast
+}
 
 @Suppress("unused")
 val disableCairoSplashAnimationPatch = bytecodePatch(
