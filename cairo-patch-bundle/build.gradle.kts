@@ -39,6 +39,7 @@ kotlin {
 
 dependencies {
     compileOnly("app.revanced:patcher-android:22.0.2-dev.1")
+    implementation("com.android.tools.smali:smali:3.0.9")
 }
 
 val bundleStaging = layout.buildDirectory.dir("bundle-staging")
