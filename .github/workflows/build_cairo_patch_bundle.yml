@@ -53,6 +53,7 @@ jobs:
         run: ./gradlew -p cairo-patch-bundle packagePatchBundle --no-daemon
 
       - name: Verify bundle structure
+        shell: bash
         run: |
           set -euo pipefail
           bundle="cairo-patch-bundle/build/outputs/patch-bundle/zunox-cairo-patches-0.1.0.jar"
@@ -60,7 +61,27 @@ jobs:
           unzip -l "$bundle"
           unzip -l "$bundle" | grep -q 'classes.dex'
           unzip -p "$bundle" META-INF/MANIFEST.MF | grep -q 'ZUNOX Cairo Splash Patch'
-          unzip -p "$bundle" classes.dex | strings | grep -q 'Could not uniquely locate MusicActivity.onCreate'
+
+          # Android may split compiled code across classes.dex, classes2.dex, etc.
+          # Search every DEX instead of assuming the patch class lands in classes.dex.
+          mapfile -t dex_entries < <(unzip -Z1 "$bundle" | grep -E '^classes([0-9]+)?\.dex$')
+          if [ "${#dex_entries[@]}" -eq 0 ]; then
+            echo "::error::Patch bundle contains no DEX files."
+            exit 1
+          fi
+
+          found_marker=false
+          for dex in "${dex_entries[@]}"; do
+            if unzip -p "$bundle" "$dex" | strings -a | grep -Fq 'Could not uniquely locate MusicActivity.onCreate'; then
+              echo "Verified Cairo patch marker in $dex"
+              found_marker=true
+              break
+            fi
+          done
+          if [ "$found_marker" != "true" ]; then
+            echo "::error::Cairo patch marker was not found in any DEX file."
+            exit 1
+          fi
 
       - name: Upload patch bundle
         uses: actions/upload-artifact@v4
