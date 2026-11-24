@@ -79,6 +79,8 @@ inflate_regs = regs(inflate_match.group(1))
 if len(inflate_regs) != 3 or inflate_regs[0] != root_reg:
     fail("Unexpected LayoutInflater.inflate receiver/result register sequence")
 temp_reg = inflate_regs[2]
+if temp_reg != 15:
+    fail(f"Expected verified YouTube Music 9.47.51 temporary register v15, found v{temp_reg}")
 if temp_reg > 15 or root_reg > 15:
     fail("Registers exceed the 4-bit range required by the injected instructions")
 if temp_reg == lottie_reg or root_reg == lottie_reg:
