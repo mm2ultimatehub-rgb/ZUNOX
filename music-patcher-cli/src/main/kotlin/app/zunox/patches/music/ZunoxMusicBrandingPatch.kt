@@ -9,7 +9,7 @@ import java.io.File
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
 private const val TARGET_VERSION = "9.47.51"
-private const val ZUNOX_PACKAGE = "com.mm2ultimatehub.zunoxmusic.next"
+private const val ZUNOX_PACKAGE = "com.zunox.music"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -104,25 +104,29 @@ val zunoxMusicBrandingPatch = resourcePatch(
             val nodes = manifest.getElementsByTagName("*")
             for (index in 0 until nodes.length) {
                 val element = nodes.item(index) as? Element ?: continue
-                for (attribute in listOf("authorities", "permission", "taskAffinity")) {
+                // Android package-scoped declarations must be isolated from Google
+                // and from every previous ZUNOX package. Authorities may contain
+                // multiple semicolon-separated values; rewrite every occurrence.
+                for (attribute in listOf(
+                    "authorities", "permission", "readPermission", "writePermission",
+                    "taskAffinity", "name"
+                )) {
                     if (!element.hasAttributeNS(ANDROID_NAMESPACE, attribute)) continue
+                    if (attribute == "name" &&
+                        element.tagName !in setOf(
+                            "permission", "uses-permission", "uses-permission-sdk-23",
+                            "uses-permission-sdk-m"
+                        )
+                    ) continue
+
                     val oldValue = element.getAttributeNS(ANDROID_NAMESPACE, attribute)
-                    if (oldValue == TARGET_PACKAGE || oldValue.startsWith("$TARGET_PACKAGE.")) {
-                        element.setAttributeNS(
-                            ANDROID_NAMESPACE,
-                            "android:$attribute",
-                            ZUNOX_PACKAGE + oldValue.removePrefix(TARGET_PACKAGE)
-                        )
+                    val rewritten = oldValue.split(';').joinToString(";") { entry ->
+                        if (entry == TARGET_PACKAGE || entry.startsWith("$TARGET_PACKAGE.")) {
+                            ZUNOX_PACKAGE + entry.removePrefix(TARGET_PACKAGE)
+                        } else entry
                     }
-                }
-                if (element.tagName == "permission" && element.hasAttributeNS(ANDROID_NAMESPACE, "name")) {
-                    val oldName = element.getAttributeNS(ANDROID_NAMESPACE, "name")
-                    if (oldName == TARGET_PACKAGE || oldName.startsWith("$TARGET_PACKAGE.")) {
-                        element.setAttributeNS(
-                            ANDROID_NAMESPACE,
-                            "android:name",
-                            ZUNOX_PACKAGE + oldName.removePrefix(TARGET_PACKAGE)
-                        )
+                    if (rewritten != oldValue) {
+                        element.setAttributeNS(ANDROID_NAMESPACE, "android:$attribute", rewritten)
                     }
                 }
             }
