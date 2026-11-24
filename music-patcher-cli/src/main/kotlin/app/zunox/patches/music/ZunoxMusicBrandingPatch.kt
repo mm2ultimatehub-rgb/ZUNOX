@@ -9,6 +9,7 @@ import java.io.File
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
 private const val TARGET_VERSION = "9.47.51"
+private const val ZUNOX_PACKAGE = "com.mm2ultimatehub.zunoxmusic"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -79,9 +80,40 @@ val zunoxMusicBrandingPatch = resourcePatch(
             val application = manifest.getElementsByTagName("application").item(0) as? Element
                 ?: throw IllegalStateException("AndroidManifest application element was not found.")
 
+            // Give ZUNOX its own Android application ID so it can coexist with
+            // the official YouTube Music installation on the same device.
+            manifest.documentElement.setAttribute("package", ZUNOX_PACKAGE)
+
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:roundIcon", "@mipmap/zunox_launcher")
+
+            // Provider authorities and custom permission names must also be unique.
+            val nodes = manifest.getElementsByTagName("*")
+            for (index in 0 until nodes.length) {
+                val element = nodes.item(index) as? Element ?: continue
+                for (attribute in listOf("authorities", "permission", "taskAffinity")) {
+                    if (!element.hasAttributeNS(ANDROID_NAMESPACE, attribute)) continue
+                    val oldValue = element.getAttributeNS(ANDROID_NAMESPACE, attribute)
+                    if (oldValue == TARGET_PACKAGE || oldValue.startsWith("$TARGET_PACKAGE.")) {
+                        element.setAttributeNS(
+                            ANDROID_NAMESPACE,
+                            "android:$attribute",
+                            ZUNOX_PACKAGE + oldValue.removePrefix(TARGET_PACKAGE)
+                        )
+                    }
+                }
+                if (element.tagName == "permission" && element.hasAttributeNS(ANDROID_NAMESPACE, "name")) {
+                    val oldName = element.getAttributeNS(ANDROID_NAMESPACE, "name")
+                    if (oldName == TARGET_PACKAGE || oldName.startsWith("$TARGET_PACKAGE.")) {
+                        element.setAttributeNS(
+                            ANDROID_NAMESPACE,
+                            "android:name",
+                            ZUNOX_PACKAGE + oldName.removePrefix(TARGET_PACKAGE)
+                        )
+                    }
+                }
+            }
         }
 
         // Replace app-name strings in every available locale.
