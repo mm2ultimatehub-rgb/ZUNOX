@@ -1,9 +1,12 @@
 package app.revanced.manager.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -17,6 +20,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -64,7 +68,26 @@ fun AppTopBar(
         Color.Unspecified
     }
 
+    val glassShape = RoundedCornerShape(22.dp)
     TopAppBar(
+        modifier = androidx.compose.ui.Modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clip(glassShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.58f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.06f))
+                ),
+                glassShape
+            ),
         title = { Text(title) },
         scrollBehavior = scrollBehavior,
         navigationIcon = {
@@ -79,7 +102,8 @@ fun AppTopBar(
         },
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = containerColor
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
         )
     )
 }
@@ -106,7 +130,26 @@ fun AppTopBar(
         Color.Unspecified
     }
 
+    val glassShape = RoundedCornerShape(22.dp)
     TopAppBar(
+        modifier = androidx.compose.ui.Modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clip(glassShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.58f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.06f))
+                ),
+                glassShape
+            ),
         title = title,
         scrollBehavior = scrollBehavior,
         navigationIcon = {
