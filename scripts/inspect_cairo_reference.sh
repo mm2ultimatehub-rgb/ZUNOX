@@ -13,7 +13,7 @@ curl --fail --location --retry 3 --output "$APK" "$APK_URL"
 echo "$EXPECTED_SHA256  $APK" | sha256sum --check -
 echo "SHA-256 verified: $EXPECTED_SHA256" | tee -a "$OUT/README.txt"
 
-apktool d --force --no-src "$APK" --output "$OUT/decoded"
+apktool d --force "$APK" --output "$OUT/decoded"
 
 {
   echo "ZUNOX Cairo reference inspection"
