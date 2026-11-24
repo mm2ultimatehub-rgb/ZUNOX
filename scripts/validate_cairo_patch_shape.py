@@ -84,9 +84,13 @@ if temp_reg > 15 or root_reg > 15:
 if temp_reg == lottie_reg or root_reg == lottie_reg:
     fail("Unexpected register alias between overlay root, null argument, and Lottie child")
 
-null_init_index = previous_instruction(inflate_index)
-if null_init_index is None or not re.search(rf"\bconst/4 v{temp_reg},\s*0x0\b", body[null_init_index]):
-    fail("Inflate ViewGroup argument is not initialized to null in the expected register")
+null_init_index = next((i for i in range(inflate_index - 1, -1, -1)
+                        if re.search(rf"^\s*const/4 v{temp_reg},\s*0x0\b", body[i])), None)
+if null_init_index is None:
+    fail("Inflate ViewGroup argument has no preceding null initialization")
+for i in range(null_init_index + 1, inflate_index):
+    if re.match(rf"^\s*[a-z0-9/-]+\s+v{temp_reg}(?:,|\s|$)", body[i]):
+        fail(f"Temporary null register v{temp_reg} is overwritten before Cairo inflate at method line {i + 1}")
 
 wide_reuse_index = None
 for i in range(root_result_index + 1, len(body)):
