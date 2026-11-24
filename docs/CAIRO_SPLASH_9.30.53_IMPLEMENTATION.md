@@ -43,3 +43,22 @@ Prefer a minimal in-place edit of the target startup layout/view that suppresses
 ## Safety boundary
 
 This is a research/automation improvement, not a claim that the Cairo patch has been implemented or tested. No ZUNOX APK is produced by this document or the reference-inspection workflow.
+
+## Clean APK fingerprint result
+
+The first successful GitHub Actions inspection decoded the clean APK and found exactly one
+`MusicActivity.onCreate(Bundle):void` method. In that method, the clean APK contains:
+
+- the `sa_e` string,
+- a `setContentView(View)` call,
+- a cast to `com.airbnb.lottie.LottieAnimationView`,
+- subsequent Lottie setup/start calls.
+
+The Morphe-patched comparison APK has the same broad method markers. The initial focused scan did
+not find the decimal/hex feature-flag literal or the resource name in the method body, so the
+fingerprint must be refined around the observed Lottie setup sequence rather than assuming the
+older literal-based matcher works unchanged.
+
+The next inspection artifact now includes the complete clean and Morphe
+`MusicActivity.onCreate(Bundle)` method bodies, not only marker lines. This will be used to
+identify a minimal, fail-closed insertion point before writing the bytecode patch.
