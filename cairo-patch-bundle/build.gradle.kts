@@ -39,7 +39,27 @@ tasks.register<Exec>("extractPatchDex") {
     doFirst { bundleStaging.get().asFile.mkdirs() }
     commandLine(
         "bash", "-lc",
-        "apk=$(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit); test -n \"$apk\"; unzip -p \"$apk\" classes.dex > '${dex.get().asFile.absolutePath}'"
+        "apk=$(find '${apkDirectory.get().asFile.absolutePath}' -maxdepth 1 -type f -name '*.apk' -print -quit); test -n \"${'\"; unzip -p \"$apk\" classes.dex > '${dex.get().asFile.absolutePath}'"
+    )
+}
+tasks.register<Zip>("packagePatchBundle") {
+    dependsOn("extractPatchDex")
+    from(bundleStaging)
+    from("src/main/bundle")
+    archiveFileName.set("zunox-cairo-patches-0.1.0.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("outputs/patch-bundle"))
+}
+}apk\"; unzip -p \"${'\" classes.dex > '${dex.get().asFile.absolutePath}'"
+    )
+}
+tasks.register<Zip>("packagePatchBundle") {
+    dependsOn("extractPatchDex")
+    from(bundleStaging)
+    from("src/main/bundle")
+    archiveFileName.set("zunox-cairo-patches-0.1.0.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("outputs/patch-bundle"))
+}
+}apk\" classes.dex > '${dex.get().asFile.absolutePath}'"
     )
 }
 tasks.register<Zip>("packagePatchBundle") {
