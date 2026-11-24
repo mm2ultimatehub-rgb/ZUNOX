@@ -117,7 +117,7 @@ jobs:
             zunox-music-aligned.apk
           "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.51-arm64.apk
           "$tools/aapt" dump badging ZUNOX-Music-9.47.51-arm64.apk > zunox-metadata.txt
-          grep -Fq "package: name='com.google.android.apps.youtube.music'" zunox-metadata.txt
+          grep -Fq "package: name='com.mm2ultimatehub.zunoxmusic'" zunox-metadata.txt
           grep -Fq "versionName='9.47.51'" zunox-metadata.txt
           grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
           if unzip -Z1 ZUNOX-Music-9.47.51-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\.(png|webp)$'; then
