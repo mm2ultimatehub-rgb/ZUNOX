@@ -8,7 +8,7 @@ import java.io.File
 
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
-private const val TARGET_VERSION = "9.30.53"
+private const val TARGET_VERSION = "9.47.51"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
