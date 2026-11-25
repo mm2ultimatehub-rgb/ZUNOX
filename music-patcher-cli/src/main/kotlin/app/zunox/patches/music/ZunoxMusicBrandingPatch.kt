@@ -9,7 +9,7 @@ import java.io.File
 private const val ANDROID_NAMESPACE = "http://schemas.android.com/apk/res/android"
 private const val TARGET_PACKAGE = "com.google.android.apps.youtube.music"
 private const val TARGET_VERSION = "9.47.51"
-private const val ZUNOX_PACKAGE = "com.zunox.music"
+private const val ZUNOX_PACKAGE = "com.zunox.music.v2"
 
 private val zunoxMusicLogo = """
     <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -76,8 +76,8 @@ val zunoxMusicBrandingPatch = resourcePatch(
             manifest.documentElement.removeAttributeNS(ANDROID_NAMESPACE, "sharedUserMaxSdkVersion")
             manifest.documentElement.removeAttribute("android:sharedUserMaxSdkVersion")
 
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751243")
-            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.54")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionCode", "94751244")
+            manifest.documentElement.setAttributeNS(ANDROID_NAMESPACE, "android:versionName", "9.47.55")
 
             application.setAttributeNS(ANDROID_NAMESPACE, "android:label", "ZUNOX")
             application.setAttributeNS(ANDROID_NAMESPACE, "android:icon", "@mipmap/zunox_launcher")
