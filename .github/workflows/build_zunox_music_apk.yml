@@ -1,0 +1,124 @@
+name: Build ZUNOX Music Release APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - zunox-cairo-splash-9530
+    paths:
+      - "music-patcher-cli/**"
+      - "cairo-patch-bundle/src/main/kotlin/**"
+      - ".github/workflows/build_zunox_music_apk.yml"
+
+permissions:
+  contents: write
+  packages: read
+
+concurrency:
+  group: zunox-music-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Patch, validate, and sign ZUNOX Music 9.47.55
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ZUNOX
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Install Android SDK platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Download and verify clean YouTube Music 9.47.51 ARM64 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-all-errors \
+            --output youtube-music-9.47.51-arm64.apk \
+            "https://d.apkpure.net/b/APK/com.google.android.apps.youtube.music?nc=arm64-v8a&sv=32&versionCode=94751240"
+          aapt="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          "$aapt" dump badging youtube-music-9.47.51-arm64.apk > apk-metadata.txt
+          grep -Fq "package: name='com.google.android.apps.youtube.music'" apk-metadata.txt
+          grep -Fq "versionCode='94751240'" apk-metadata.txt
+          grep -Fq "versionName='9.47.51'" apk-metadata.txt
+          sha256sum youtube-music-9.47.51-arm64.apk
+
+      - name: Build patch runner
+        env:
+          ORG_GRADLE_PROJECT_githubPackagesUsername: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_githubPackagesPassword: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew -p music-patcher-cli jar --no-daemon
+
+      - name: Apply ZUNOX patches
+        env:
+          ORG_GRADLE_PROJECT_githubPackagesUsername: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_githubPackagesPassword: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ./gradlew -p music-patcher-cli run --no-daemon --args="$GITHUB_WORKSPACE/youtube-music-9.47.51-arm64.apk $GITHUB_WORKSPACE/music-patcher-cli/build/libs/zunox-music-patches-0.1.0.jar $GITHUB_WORKSPACE/zunox-music-unsigned.apk $ANDROID_HOME"
+
+      - name: Require release signing secrets and decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ENTRY_ALIAS: ${{ secrets.KEYSTORE_ENTRY_ALIAS }}
+          KEYSTORE_ENTRY_PASSWORD: ${{ secrets.KEYSTORE_ENTRY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${KEYSTORE_BASE64:-}" || { echo "::error::KEYSTORE_BASE64 is missing; refusing to publish an unsigned APK."; exit 1; }
+          test -n "${KEYSTORE_PASSWORD:-}" || { echo "::error::KEYSTORE_PASSWORD is missing."; exit 1; }
+          test -n "${KEYSTORE_ENTRY_ALIAS:-}" || { echo "::error::KEYSTORE_ENTRY_ALIAS is missing."; exit 1; }
+          test -n "${KEYSTORE_ENTRY_PASSWORD:-}" || { echo "::error::KEYSTORE_ENTRY_PASSWORD is missing."; exit 1; }
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > zunox-release.jks
+          test -s zunox-release.jks
+
+      - name: Align, sign, and validate Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ENTRY_ALIAS: ${{ secrets.KEYSTORE_ENTRY_ALIAS }}
+          KEYSTORE_ENTRY_PASSWORD: ${{ secrets.KEYSTORE_ENTRY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          "$tools/zipalign" -p -f 4 zunox-music-unsigned.apk zunox-music-aligned.apk
+          "$tools/apksigner" sign --ks zunox-release.jks --ks-key-alias "$KEYSTORE_ENTRY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_ENTRY_PASSWORD --out ZUNOX-Music-9.47.55-arm64.apk zunox-music-aligned.apk
+          "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.55-arm64.apk
+          "$tools/aapt" dump badging ZUNOX-Music-9.47.55-arm64.apk > zunox-metadata.txt
+          grep -Fq "package: name='com.zunox.music.v2'" zunox-metadata.txt
+          grep -Fq "versionName='9.47.55'" zunox-metadata.txt
+          grep -Fq "versionCode='94751244'" zunox-metadata.txt
+          grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
+          "$tools/aapt" dump xmltree ZUNOX-Music-9.47.55-arm64.apk AndroidManifest.xml > zunox-manifest-tree.txt
+          if grep -qi 'sharedUserId' zunox-manifest-tree.txt; then
+            echo "::error::Google sharedUserId remains in the manifest."; exit 1
+          fi
+          if grep -E 'android:(authorities|permission|readPermission|writePermission).*com\.google\.android\.apps\.youtube\.music' zunox-manifest-tree.txt; then
+            echo "::error::Upstream provider authority or custom permission remains."; exit 1
+          fi
+          if unzip -Z1 ZUNOX-Music-9.47.55-arm64.apk | grep -Eq 'res/drawable-[^/]*/(action_bar_logo_release|action_bar_logo_ringo2|action_bar_logo_ringo3|ytm_logo_ringo2|youtube_music_logo_short|splash_screen|audio_banner_app_icon|widget_default_icon|ic_app_icons_themed_youtube_music|ic_stat_ytmusic_white|music_push_notification_white)\.(png|webp)$'; then
+            echo "::error::Old YouTube Music branding resources remain."; exit 1
+          fi
+
+      - name: Publish signed APK as direct GitHub Release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="zunox-music-9.47.55-${GITHUB_RUN_NUMBER}"
+          test -s ZUNOX-Music-9.47.55-arm64.apk
+          gh release create "$tag" ZUNOX-Music-9.47.55-arm64.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ZUNOX Music 9.47.55" --notes "Signed ZUNOX Music 9.47.55 ARM64 APK. Package ID: com.zunox.music.v2. Install as a separate app from previous package versions."
+
+      - name: Remove temporary signing files
+        if: always()
+        run: rm -f zunox-release.jks zunox-music-aligned.apk

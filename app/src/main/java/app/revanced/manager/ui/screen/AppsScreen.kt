@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,11 +44,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.revanced.manager.R
 import app.revanced.manager.data.room.apps.installed.InstalledApp
@@ -247,7 +252,25 @@ fun AppsScreen(
 
             item(key = "PATCHABLE_STORAGE") {
                 ListItem(
-                    modifier = Modifier.clickable {
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                                    MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                                )
+                            )
+                        )
+                        .border(
+                            1.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+                            ),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .clickable {
                         try {
                             pickApkLauncher.launch(APK_MIMETYPE)
                         } catch (_: ActivityNotFoundException) {
@@ -402,7 +425,25 @@ private fun AppItem(
     suggestedVersion: String? = null,
 ) {
     ListItem(
-        modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+                ),
+                RoundedCornerShape(20.dp)
+            )
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         leadingContent = {
             AppIcon(
                 packageInfo = packageInfo,

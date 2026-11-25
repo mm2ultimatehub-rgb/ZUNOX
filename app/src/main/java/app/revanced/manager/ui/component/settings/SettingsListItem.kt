@@ -3,6 +3,8 @@ package app.revanced.manager.ui.component.settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.view.HapticFeedbackConstantsCompat
 import app.revanced.manager.util.withHapticFeedback
 
@@ -46,9 +51,25 @@ fun SettingsListItem(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1)
-    val colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-    )
+    val colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    val glassShape = RoundedCornerShape(20.dp)
+    val glassModifier = modifier
+        .clip(glassShape)
+        .background(
+            Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                    MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                )
+            )
+        )
+        .border(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+            ),
+            shape = glassShape
+        )
 
     SegmentedListItem(
         onClick = onClick?.withHapticFeedback(HapticFeedbackConstantsCompat.CLOCK_TICK) ?: { }.withHapticFeedback(HapticFeedbackConstantsCompat.CLOCK_TICK),
@@ -56,7 +77,7 @@ fun SettingsListItem(
         onLongClickLabel = onLongClickLabel,
         shapes = shapes,
         colors = colors,
-        modifier = modifier,
+        modifier = glassModifier,
         overlineContent = overlineContent,
         leadingContent = leadingContent,
         trailingContent = trailingContent?.let {
@@ -95,9 +116,25 @@ fun SettingsListItem(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1)
-    val colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-    )
+    val colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    val glassShape = RoundedCornerShape(20.dp)
+    val glassModifier = modifier
+        .clip(glassShape)
+        .background(
+            Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                    MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
+                )
+            )
+        )
+        .border(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.055f))
+            ),
+            shape = glassShape
+        )
 
     SegmentedListItem(
         onClick = onClick?.withHapticFeedback(HapticFeedbackConstantsCompat.CLOCK_TICK) ?: { }.withHapticFeedback(HapticFeedbackConstantsCompat.CLOCK_TICK),
@@ -105,7 +142,7 @@ fun SettingsListItem(
         onLongClickLabel = onLongClickLabel,
         shapes = shapes,
         colors = colors,
-        modifier = modifier,
+        modifier = glassModifier,
         overlineContent = overlineContent,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
