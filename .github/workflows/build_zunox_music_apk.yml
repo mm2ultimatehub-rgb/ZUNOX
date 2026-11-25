@@ -117,11 +117,18 @@ jobs:
             zunox-music-aligned.apk
           "$tools/apksigner" verify --verbose ZUNOX-Music-9.47.54-arm64.apk
           "$tools/aapt" dump badging ZUNOX-Music-9.47.54-arm64.apk > zunox-metadata.txt
-          grep -Fq "package: name='com.zunox.music'" zunox-metadata.txt
-          grep -Fq "versionName='9.47.54'" zunox-metadata.txt
-          grep -Fq "versionCode='94751243'" zunox-metadata.txt
-          grep -Fq "application-label:'ZUNOX'" zunox-metadata.txt
-          grep -Fq "application: label='ZUNOX' icon='0x" zunox-metadata.txt
+          cat zunox-metadata.txt
+          require_metadata() {
+            if ! grep -Fq "$1" zunox-metadata.txt; then
+              echo "::error::APK metadata validation failed; expected: $1"
+              exit 1
+            fi
+          }
+          require_metadata "package: name='com.zunox.music'"
+          require_metadata "versionName='9.47.54'"
+          require_metadata "versionCode='94751243'"
+          require_metadata "application-label:'ZUNOX'"
+          require_metadata "application: label='ZUNOX' icon='0x"
           "$tools/aapt" dump xmltree ZUNOX-Music-9.47.54-arm64.apk AndroidManifest.xml > zunox-manifest-tree.txt
           if grep -qi 'sharedUserId' zunox-manifest-tree.txt; then
             echo "::error::Google sharedUserId remains; this APK cannot install with the ZUNOX release key."
