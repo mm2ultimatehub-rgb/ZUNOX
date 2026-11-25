@@ -186,14 +186,32 @@ android {
 
             val keystoreFile = file("keystore.jks")
 
-            if (project.hasProperty("signAsDebug") || !keystoreFile.exists()) {
+            if (project.hasProperty("signAsDebug")) {
+                // Debug signing is only allowed when explicitly requested for local testing.
                 signingConfig = signingConfigs.getByName("debug")
             } else {
+                if (!keystoreFile.isFile) {
+                    throw GradleException(
+                        "Release signing keystore is missing at ${keystoreFile}. " +
+                            "Provide app/keystore.jks or use -PsignAsDebug only for local testing."
+                    )
+                }
+
+                val storePassword = System.getenv("KEYSTORE_PASSWORD")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("KEYSTORE_PASSWORD is required for a release build.")
+                val keyAlias = System.getenv("KEYSTORE_ENTRY_ALIAS")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("KEYSTORE_ENTRY_ALIAS is required for a release build.")
+                val keyPassword = System.getenv("KEYSTORE_ENTRY_PASSWORD")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("KEYSTORE_ENTRY_PASSWORD is required for a release build.")
+
                 signingConfig = signingConfigs.create("release") {
                     storeFile = keystoreFile
-                    storePassword = System.getenv("KEYSTORE_PASSWORD")
-                    keyAlias = System.getenv("KEYSTORE_ENTRY_ALIAS")
-                    keyPassword = System.getenv("KEYSTORE_ENTRY_PASSWORD")
+                    this.storePassword = storePassword
+                    this.keyAlias = keyAlias
+                    this.keyPassword = keyPassword
                 }
             }
         }
