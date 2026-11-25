@@ -30,11 +30,28 @@ jobs:
             - name: Cache Gradle
               uses: burrunan/gradle-cache-action@v3
 
-            - name: Build
+            - name: Setup keystore
+              env:
+                  KEYSTORE_B64: ${{ secrets.KEYSTORE }}
+              run: |
+                  set -euo pipefail
+                  test -n "$KEYSTORE_B64" || { echo "::error::Missing KEYSTORE secret"; exit 1; }
+                  printf '%s' "$KEYSTORE_B64" | base64 --decode > "app/keystore.jks"
+                  test -s "app/keystore.jks"
+
+            - name: Build signed release APK
               env:
                   ORG_GRADLE_PROJECT_githubPackagesUsername: ${{ github.actor }}
                   ORG_GRADLE_PROJECT_githubPackagesPassword: ${{ secrets.GITHUB_TOKEN }}
-              run: ./gradlew assembleRelease
+                  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+                  KEYSTORE_ENTRY_ALIAS: ${{ secrets.KEYSTORE_ENTRY_ALIAS }}
+                  KEYSTORE_ENTRY_PASSWORD: ${{ secrets.KEYSTORE_ENTRY_PASSWORD }}
+              run: |
+                  set -euo pipefail
+                  test -n "$KEYSTORE_PASSWORD" || { echo "::error::Missing KEYSTORE_PASSWORD"; exit 1; }
+                  test -n "$KEYSTORE_ENTRY_ALIAS" || { echo "::error::Missing KEYSTORE_ENTRY_ALIAS"; exit 1; }
+                  test -n "$KEYSTORE_ENTRY_PASSWORD" || { echo "::error::Missing KEYSTORE_ENTRY_PASSWORD"; exit 1; }
+                  ./gradlew --no-daemon assembleRelease
 
             - name: Setup Node.js
               uses: actions/setup-node@v6
@@ -51,10 +68,6 @@ jobs:
                   gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
                   passphrase: ${{ secrets.GPG_PASSPHRASE }}
                   fingerprint: ${{ vars.GPG_FINGERPRINT }}
-
-            - name: Setup keystore
-              run: |
-                  echo "${{ secrets.KEYSTORE }}" | base64 --decode > "app/keystore.jks"
 
             - name: Release API
               run: npx multi-semantic-release --tag-format 'api@${version}' --ignore-packages app
