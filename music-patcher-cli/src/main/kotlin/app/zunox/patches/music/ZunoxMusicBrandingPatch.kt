@@ -89,19 +89,27 @@ val zunoxMusicBrandingPatch = resourcePatch(
             val providers = manifest.getElementsByTagName("provider")
             for (index in 0 until providers.length) {
                 val provider = providers.item(index) as? Element ?: continue
-                val raw = if (provider.hasAttributeNS(ANDROID_NAMESPACE, "authorities")) {
-                    provider.getAttributeNS(ANDROID_NAMESPACE, "authorities")
-                } else {
-                    provider.getAttribute("android:authorities")
-                }
-                if (raw.isNotBlank()) {
-                    val rewritten = raw.split(';').joinToString(";") { authority ->
+                // The patcher's XML DOM can expose Android attributes as either
+                // namespace-aware nodes or literal "android:*" attributes.
+                // Walk the actual attribute map and update the serialized node.
+                val attributes = provider.attributes
+                for (attributeIndex in 0 until attributes.length) {
+                    val attribute = attributes.item(attributeIndex)
+                    if (attribute.nodeName != "android:authorities" &&
+                        !(attribute.namespaceURI == ANDROID_NAMESPACE && attribute.localName == "authorities")
+                    ) continue
+
+                    val oldValue = attribute.nodeValue.orEmpty()
+                    val rewritten = oldValue.split(';').joinToString(";") { authority ->
                         if (authority == TARGET_PACKAGE || authority.startsWith("$TARGET_PACKAGE.")) {
                             ZUNOX_PACKAGE + authority.removePrefix(TARGET_PACKAGE)
                         } else authority
                     }
-                    provider.setAttributeNS(ANDROID_NAMESPACE, "android:authorities", rewritten)
-                    provider.setAttribute("android:authorities", rewritten)
+                    if (rewritten != oldValue) {
+                        attribute.nodeValue = rewritten
+                        provider.setAttribute("android:authorities", rewritten)
+                        provider.setAttributeNS(ANDROID_NAMESPACE, "android:authorities", rewritten)
+                    }
                 }
             }
 
