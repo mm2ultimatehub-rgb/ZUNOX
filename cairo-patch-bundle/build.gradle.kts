@@ -33,7 +33,12 @@ android {
 kotlin {
     jvmToolchain(17)
     compilerOptions {
-        freeCompilerArgs.addAll("-Xexplicit-backing-fields", "-Xcontext-parameters")
+        freeCompilerArgs.addAll(
+            "-Xskip-prerelease-check",
+            "-Xallow-unstable-dependencies",
+            "-Xexplicit-backing-fields",
+            "-Xcontext-parameters"
+        )
     }
 }
 
